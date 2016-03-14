@@ -33,7 +33,10 @@ class Database:
         self._load_unavailability(unavailability)
 
         # Commit data
-        self._database.commit()
+        self.commit()
+
+    def __getattr__(self, attr):
+        return getattr(self._database, attr)
 
     @classmethod
     def from_id(clc, id):
@@ -49,7 +52,7 @@ class Database:
         )
 
     def _setup_tables(self):
-        self._database.executescript('''
+        self.executescript('''
             CREATE TABLE courses (
                 course               INTEGER PRIMARY KEY NOT NULL,
                 lecturer             INTEGER NOT NULL,
@@ -91,48 +94,48 @@ class Database:
 
     def _load_courses(self, filepath):
         with open(filepath, 'r') as f:
-            self._database.executemany(
+            self.executemany(
                 'INSERT INTO courses VALUES (?, ?, ?, ?, ?)',
                 ((a[1:], b[1:], c, d, e) for (a, b, c, d, e) in _parse_file(f))
             )
 
     def _load_lecturers(self, filepath):
         with open(filepath, 'r') as f:
-            self._database.executemany(
+            self.executemany(
                 'INSERT INTO lecturers VALUES (?)',
                 ((a[1:], ) for (a, ) in _parse_file(f))
             )
 
     def _load_rooms(self, filepath):
         with open(filepath, 'r') as f:
-            self._database.executemany(
+            self.executemany(
                 'INSERT INTO rooms VALUES (?, ?)',
                 ((a[1:], b) for (a, b) in _parse_file(f))
             )
 
     def _load_curricula(self, filepath):
         with open(filepath, 'r') as f:
-            self._database.executemany(
+            self.executemany(
                 'INSERT INTO curricula VALUES (?, ?)',
                 ((a[1:], b) for (a, b) in _parse_file(f))
             )
 
     def _load_relation(self, filepath):
         with open(filepath, 'r') as f:
-            self._database.executemany(
+            self.executemany(
                 'INSERT INTO relation VALUES (?, ?)',
                 ((a[1:], b[1:]) for (a, b) in _parse_file(f))
             )
 
     def _load_unavailability(self, filepath):
         with open(filepath, 'r') as f:
-            self._database.executemany(
+            self.executemany(
                 'INSERT INTO unavailability VALUES (?, ?, ?)',
                 ((a[1:], b, c) for (a, b, c) in _parse_file(f))
             )
 
     def close(self):
-        self._database.executescript('''
+        self.executescript('''
             DROP TABLE courses;
             DROP TABLE curricula;
             DROP TABLE lecturers;
