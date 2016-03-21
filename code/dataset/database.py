@@ -53,21 +53,22 @@ class Database:
 
     def _setup_tables(self):
         self.executescript('''
+            CREATE TABLE lecturers (
+                lecturer INTEGER PRIMARY KEY NOT NULL
+            );
+
             CREATE TABLE courses (
                 course               INTEGER PRIMARY KEY NOT NULL,
                 lecturer             INTEGER NOT NULL,
                 number_of_lectures   INTEGER NOT NULL,
                 minimum_working_days INTEGER NOT NULL,
-                number_of_student    INTEGER NOT NULL
+                number_of_student    INTEGER NOT NULL,
+                FOREIGN KEY (lecturer) REFERENCES lecturers(lecturer)
             );
 
             CREATE TABLE curricula (
                 curriculum        INTEGER PRIMARY KEY NOT NULL,
                 number_of_courses INTEGER NOT NULL
-            );
-
-            CREATE TABLE lecturers (
-                lecturer INTEGER PRIMARY KEY NOT NULL
             );
 
             CREATE TABLE relation (
