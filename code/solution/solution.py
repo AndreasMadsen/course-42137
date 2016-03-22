@@ -16,11 +16,60 @@ class Solution:
         self._sum_period_room = collections.Counter()
 
         # Add schedule list if provided
-        if (schedule is not None):
-            self.schedule = [Combination(*item) for item in schedule]
+        if (schedule is not None and len(schedule) > 0):
+            if isinstance(schedule[0], Combination):
+                self.schedule = list(schedule)
+            else:
+                self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
 
+    def copy(self):
+        return Solution(self._database, scheduled=self.schedule)
+
+    def swap(self, time_room_a, time_room_b):
+        new_schedule = []
+        combination_a = None
+        combination_b = None
+
+        # Find the combination objects (aka associated course number)
+        for combination in self.schedule:
+            if time_room_a == combination.time_room:
+                combination_a = combination
+            elif time_room_b == combination.time_room:
+                combination_b = combination
+            else:
+                new_schedule.append(combination)
+
+        # Add new combination objects to schedule
+        if (combination_a is None and combination_b is None):
+            return
+
+        if (combination_b is not None):
+            new_schedule.append(Combination(
+                course=combination_b.course,
+                day=time_room_a[0],
+                period=time_room_a[1],
+                room=time_room_a[2]
+            ))
+        if (combination_a is not None):
+            new_schedule.append(Combination(
+                course=combination_a.course,
+                day=time_room_b[0],
+                period=time_room_b[1],
+                room=time_room_b[2]
+            ))
+
+        # Update schedule and calculate sum
+        self.schedule = new_schedule
+        self._precalc_sums()
+
     def _precalc_sums(self):
+        self._sum_time.clear()
+        self._sum_room.clear()
+        self._sum_course.clear()
+        self._sum_time_room.clear()
+        self._sum_period_room.clear()
+
         for combination in self.schedule:
             self._sum_time[combination.course_room] += 1
             self._sum_room[combination.course_time] += 1
