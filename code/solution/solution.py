@@ -1,5 +1,6 @@
 
 import collections
+import textwrap
 
 from solution.combination import Combination
 
@@ -8,9 +9,11 @@ class Solution:
         self.schedule = []
         self._database = database
 
+        self._sum_time = collections.Counter()
         self._sum_room = collections.Counter()
         self._sum_course = collections.Counter()
         self._sum_time_room = collections.Counter()
+        self._sum_period_room = collections.Counter()
 
         # Add schedule list if provided
         if (schedule is not None):
@@ -19,9 +22,11 @@ class Solution:
 
     def _precalc_sums(self):
         for combination in self.schedule:
+            self._sum_time[combination.course_room] += 1
             self._sum_room[combination.course_time] += 1
             self._sum_course[combination.time_room] += 1
             self._sum_time_room[combination.course] += 1
+            self._sum_period_room[combination.course_day] += 1
 
     def valid(self):
         cursor = self._database.cursor()
@@ -52,7 +57,7 @@ class Solution:
             # TODO: count should never be zero
             if (count == 0): continue
 
-            # Check that course is "available" at this time
+            # Check that course is isn't scheduled too many times
             L_c = cursor.execute(sql, (course, )).fetchone()[0]
             if count > L_c: return False
 
@@ -75,3 +80,124 @@ class Solution:
                     if (s > 1): return False
 
         return True
+
+    def _room_capacity(self, cursor):
+        # exceeded room capacity
+        V_sum = 0
+        sql = '''SELECT courses.number_of_student - rooms.capacity
+                    FROM courses
+                    INNER JOIN rooms ON rooms.room = ?
+                    WHERE course = ?'''
+        for combination in self.schedule:
+            exceeded = cursor.execute(sql, combination.room_course).fetchone()[0]
+            V_sum += max(0, exceeded)
+
+        return V_sum
+
+    def _unscheduled(self, cursor):
+        # scheduled to few times
+        U_sum = 0
+        sql = '''SELECT course, number_of_lectures
+                    FROM courses'''
+        for course, num_lectures in cursor.execute(sql):
+            U_sum += max(0, num_lectures - self._sum_time_room[course])
+
+        return U_sum
+
+    def _room_stability(self, cursor):
+        # room stability
+        P_sum = 0
+        room_stability = collections.defaultdict(set)
+        for (course, room), count in self._sum_time.items():
+            # TODO: count should never be zero
+            if (count == 0): continue
+            room_stability[course].add(room)
+        for rooms in room_stability.values():
+            P_sum += max(0, len(rooms) - 1)
+
+        return P_sum
+
+    def _minimum_working_days(self, cursor):
+        # to few working days
+        W_sum = 0
+        sql = '''SELECT course, minimum_working_days
+                    FROM courses'''
+        day_spread = collections.defaultdict(set)
+        for (course, day), count in self._sum_period_room.items():
+            # TODO: count should never be zero
+            if (count == 0): continue
+            day_spread[course].add(day)
+        for course, min_spread in cursor.execute(sql):
+            W_sum += max(0, min_spread - len(day_spread[course]))
+
+        return W_sum
+
+    def _curriculum_compactness(self, cursor):
+        # curriculum continuity
+        A_sum = 0
+        sql = '''SELECT course
+                    FROM relation
+                    WHERE curriculum = ?'''
+        for q in range(0, self._database.curricula):
+            for (course, ) in cursor.execute(sql, (q, )):
+                for day in range(0, self._database.days):
+                    # Given (c in q(i), d) count non adjacent courses
+                    prev_exist = False
+                    added_one = False
+                    for period in range(0, self._database.periods_per_day):
+                        if self._sum_room[(course, day, period)] > 0:
+                            if prev_exist:
+                                # Compenstate for [_, 1, 2] where the first
+                                # course(1) would add one but actaully be
+                                # adjacent
+                                if added_one: A_sum -= 1
+                                added_one = False
+                            else:
+                                A_sum += 1
+                                added_one = True
+                            prev_exist = True
+                        else:
+                            prev_exist = False
+
+        return A_sum
+
+    def cost_seperated(self):
+        cursor = self._database.cursor()
+        U_sum = self._unscheduled(cursor)
+        W_sum = self._minimum_working_days(cursor)
+        A_sum = self._curriculum_compactness(cursor)
+        P_sum = self._room_stability(cursor)
+        V_sum = self._room_capacity(cursor)
+
+        return {
+            "U_sum": U_sum,
+            "W_sum": W_sum,
+            "A_sum": A_sum,
+            "P_sum": P_sum,
+            "V_sum": V_sum
+        }
+
+    def _total_cost(self, U_sum, W_sum, A_sum, P_sum, V_sum):
+        return 10 * U_sum + 5 * W_sum + 2 * A_sum + P_sum + V_sum
+
+    def cost(self):
+        return self._total_cost(**self.cost_seperated())
+
+    def __str__(self):
+        seperated = self.cost_seperated()
+        cost = self._total_cost(**seperated)
+
+        header = textwrap.dedent("""\
+        Unscheduled {U_sum}
+        RoomCapacity {V_sum}
+        MinimumWorkingDays {W_sum}
+        CurriculumCompactness {A_sum}
+        RoomStability {P_sum}
+        Objective {cost}
+        """.format(cost=cost, **seperated))
+
+        body = ""
+        for combination in self.schedule:
+            body += str(combination) + "\n"
+
+        return header + body

@@ -15,5 +15,22 @@ class Combination:
         return (self.course, self.day, self.period)
 
     @property
+    def course_room(self):
+        return (self.course, self.room)
+
+    @property
+    def room_course(self):
+        return (self.room, self.course)
+
+    @property
     def time_room(self):
         return (self.day, self.period, self.room)
+
+    @property
+    def course_day(self):
+        return (self.course, self.day)
+
+    def __str__(self):
+        return "C%04d %1d %1d R%04d" % (
+            self.course, self.day, self.period, self.room
+        )
