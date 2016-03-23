@@ -1,0 +1,3 @@
+
+test:
+	nosetests code/test/*
