@@ -2,8 +2,10 @@
 import time
 
 class Tabu:
-    def __init__(self, database, initial):
+    def __init__(self, database, initial, verbose=False):
         self._database = database
+        self._verbose = verbose
+
         self._swap_tabu = set()
         self._insert_tabu = set()
         self._remove_tabu = set()
@@ -11,6 +13,9 @@ class Tabu:
         self.iterations = 0
         self.solution = initial
         self.objective = self.solution.cost()
+
+    def _print(self, *msg):
+        if (self._verbose): print(*msg)
 
     def _day_period_room(self, day=-1, period=-1, room=-1):
         for d in range(day + 1, self._database.days):
@@ -23,6 +28,7 @@ class Tabu:
         solution_updated = False
 
         while(time.clock() < max_time):
+            if (self._verbose): tick = time.clock()
             solution_updated = False
 
             # Insert missing courses
@@ -86,6 +92,9 @@ class Tabu:
                         solution_updated = True
 
             self.iterations += 1
+
+            if (self._verbose):
+                self._print("iteration %d took %d sec" % (self.iterations, time.clock() - tick))
 
             if (solution_updated is False):
                 return
