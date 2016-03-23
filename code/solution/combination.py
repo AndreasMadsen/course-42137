@@ -34,6 +34,15 @@ class Combination:
     def course_day(self):
         return (self.course, self.day)
 
+    def __eq__(self, other):
+        return isinstance(other, Combination) and (
+            self.course == other.course and self.day == other.day and
+            self.period == other.period and self.room == other.room
+        )
+
+    def __hash__(self):
+        return hash((self.course, self.day, self.period, self.room))
+
     def __str__(self):
         return "C%04d %1d %1d R%04d" % (
             self.course, self.day, self.period, self.room
