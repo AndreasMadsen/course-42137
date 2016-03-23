@@ -8,6 +8,9 @@ class Solution:
     def __init__(self, database, schedule=None):
         self.schedule = []
         self._database = database
+        self._cursor = database.cursor()
+
+        self._dict_time = collections.defaultdict(list)
 
         self._sum_time = collections.Counter()
         self._sum_room = collections.Counter()
@@ -22,6 +25,55 @@ class Solution:
             else:
                 self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
+
+    def _add_valid(self, course, day, period, room):
+        # 1b
+        # This course is already registred at this time
+        if self._sum_room[course, day, period] > 0: return False
+        # This course can not be assigned to this time slot
+        sql = '''SELECT count(*) FROM unavailability
+                 WHERE course = ? AND day = ? AND period = ?'''
+        F_ct = self._cursor.execute(sql, (course, day, period)).fetchone()[0]
+        if F_ct == 1: return False
+
+        # 1c
+        # no other course is registred at this time in this room
+        if self._sum_course[day, period, room] > 0: return False
+
+        # 1d
+        # the maximum number of lecturers is not exceeded
+        sql = '''SELECT number_of_lectures FROM courses
+                 WHERE course = ?'''
+        L_c = self._cursor.execute(sql, (course, )).fetchone()[0]
+        if self._sum_time_room[course] >= L_c: return False
+
+        # 1e
+        # There are no conflicting courses scheduled at this time
+        sql = '''SELECT DISTINCT c2.course as c2
+                    FROM courses AS c1
+                    LEFT JOIN relation AS r1 ON c1.course = r1.course
+                    INNER JOIN (
+                        SELECT ct.course, ct.lecturer, rt.curriculum from courses AS ct
+                        LEFT JOIN relation AS rt ON ct.course = rt.course
+                    ) AS c2
+                      ON c1.course != c2.course
+                      AND (c1.lecturer = c2.lecturer OR r1.curriculum = c2.curriculum)
+                    WHERE c1.course = ?'''
+        for (conflicting_course, ) in self._cursor.execute(sql, (course, )):
+            for existing_combination in self._dict_time[day, period]:
+                if conflicting_course == existing_combination.course:
+                    return False
+
+        return True
+
+    def _remove_valid(self):
+        return False
+
+    def simulate_add(self, course, day, period, room):
+        if not self._add_valid(course, day, period, room):
+            return None
+
+        return 0
 
     def export(self):
         return [c.all for c in self.schedule]
@@ -80,6 +132,7 @@ class Solution:
         self._sum_course.clear()
         self._sum_time_room.clear()
         self._sum_period_room.clear()
+        self._dict_time.clear()
 
         for combination in self.schedule:
             self._sum_time[combination.course_room] += 1
@@ -87,6 +140,7 @@ class Solution:
             self._sum_course[combination.time_room] += 1
             self._sum_time_room[combination.course] += 1
             self._sum_period_room[combination.course_day] += 1
+            self._dict_time[combination.time].append(combination)
 
     def missing_courses(self):
         cursor = self._database.cursor()
