@@ -74,3 +74,18 @@ def test_diffrent_leacher_and_curricula():
         'W_sum': 104,
         'P_sum': 0
     })
+
+def test_diffrent_courses_same_curricula():
+    # course 4 and 5 belong to the same curricula thus they are adjacent
+    s = solution.Solution(database, [
+        (4, 0, 0, 1),
+        (5, 0, 1, 1)
+    ])
+
+    assert_equal(s.cost_seperated(), {
+        'A_sum': 0,
+        'V_sum': 0,
+        'U_sum': 158,
+        'W_sum': 104,
+        'P_sum': 0
+    })

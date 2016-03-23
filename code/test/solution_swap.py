@@ -45,9 +45,9 @@ def test_swap():
     Unscheduled 154
     RoomCapacity 0
     MinimumWorkingDays 102
-    CurriculumCompactness 3
+    CurriculumCompactness 1
     RoomStability 0
-    Objective 2056
+    Objective 2052
     C0000 0 1 R0000
     C0000 0 2 R0000
     C0001 1 1 R0000

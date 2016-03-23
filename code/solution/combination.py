@@ -7,6 +7,10 @@ class Combination:
         self.room = room
 
     @property
+    def all(self):
+        return (self.course, self.day, self.period, self.room)
+
+    @property
     def time(self):
         return (self.day, self.period)
 

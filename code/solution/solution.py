@@ -23,8 +23,19 @@ class Solution:
                 self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
 
+    def export(self):
+        return [c.all for c in self.schedule]
+
     def copy(self):
-        return Solution(self._database, scheduled=self.schedule)
+        return Solution(self._database, schedule=self.schedule)
+
+    def insert(self, combination):
+        self.schedule.append(Combination(*combination))
+        self._precalc_sums()
+
+    def remove(self, combination):
+        self.schedule = [c for c in self.schedule if c.all != combination]
+        self._precalc_sums()
 
     def swap(self, time_room_a, time_room_b):
         new_schedule = []
@@ -76,6 +87,20 @@ class Solution:
             self._sum_course[combination.time_room] += 1
             self._sum_time_room[combination.course] += 1
             self._sum_period_room[combination.course_day] += 1
+
+    def missing_courses(self):
+        cursor = self._database.cursor()
+        courses = []
+        sql = '''SELECT course, number_of_lectures
+                    FROM courses'''
+        for course, num_lectures in cursor.execute(sql):
+            if num_lectures - self._sum_time_room[course] > 0:
+                courses.append(course)
+
+        return courses
+
+    def existing_combinations(self):
+        return [combination.all for combination in self.schedule]
 
     def valid(self):
         cursor = self._database.cursor()
@@ -188,13 +213,16 @@ class Solution:
                     FROM relation
                     WHERE curriculum = ?'''
         for q in range(0, self._database.curricula):
-            for (course, ) in cursor.execute(sql, (q, )):
-                for day in range(0, self._database.days):
-                    # Given (c in q(i), d) count non adjacent courses
-                    prev_exist = False
-                    added_one = False
-                    for period in range(0, self._database.periods_per_day):
+            for day in range(0, self._database.days):
+                # Given (c in q(i), d) count non adjacent courses
+                prev_exist = False
+                added_one = False
+                for period in range(0, self._database.periods_per_day):
+                    found_course = False
+                    for (course, ) in cursor.execute(sql, (q, )):
                         if self._sum_room[(course, day, period)] > 0:
+                            found_course = True
+
                             if prev_exist:
                                 # Compenstate for [_, 1, 2] where the first
                                 # course(1) would add one but actaully be
@@ -204,9 +232,9 @@ class Solution:
                             else:
                                 A_sum += 1
                                 added_one = True
-                            prev_exist = True
-                        else:
-                            prev_exist = False
+                            break
+
+                    prev_exist = found_course
 
         return A_sum
 
