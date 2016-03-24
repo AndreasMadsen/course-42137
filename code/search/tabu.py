@@ -23,6 +23,9 @@ class Tabu:
                 for r in range(room + 1, self._database.rooms):
                     yield (d, p, r)
 
+    def _total_cost(self, U_sum, W_sum, A_sum, P_sum, V_sum):
+        return 10 * U_sum + 5 * W_sum + 2 * A_sum + P_sum + V_sum
+
     def search(self, max_duration):
         max_time = time.clock() + max_duration
         solution_updated = False
@@ -40,16 +43,15 @@ class Tabu:
                         continue
 
                     # Create simulated solution
-                    simulation = self.solution.copy()
-                    simulation.insert(combination)
+                    penalties = self.solution.simulate_add(*combination, full=True)
 
                     # If valid and better
-                    if simulation.valid():
-                        if simulation.cost() < self.objective:
+                    if penalties is not None:
+                        if self._total_cost(**penalties) < 0:
                             # Add to tabu and update solution
                             self._insert_tabu.add(combination)
-                            self.solution = simulation
-                            self.objective = simulation.cost()
+                            self.solution.mutate_add(*combination, penalties=penalties)
+                            self.objective = self.solution.objective
                             solution_updated = True
 
             # Switch courses
