@@ -81,16 +81,15 @@ class Tabu:
                     continue
 
                 # Create simulated solution
-                simulation = self.solution.copy()
-                simulation.remove(combination)
+                penalties = self.solution.simulate_remove(*combination, full=True)
 
                 # If valid and better
-                if simulation.valid():
-                    if simulation.cost() < self.objective:
+                if penalties is not None:
+                    if self._total_cost(**penalties) < 0:
                         # Add to tabu and update solution
                         self._remove_tabu.add(combination)
-                        self.solution = simulation
-                        self.objective = simulation.cost()
+                        self.solution.mutate_remove(*combination, penalties=penalties)
+                        self.objective = self.solution.objective
                         solution_updated = True
 
             self.iterations += 1
