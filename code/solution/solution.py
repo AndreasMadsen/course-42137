@@ -7,10 +7,20 @@ from solution.combination import Combination
 class Solution:
     def __init__(self, database, schedule=None):
         self.schedule = []
+        self.objective = 0
+        self.penalties = {
+            "U_sum": 0,
+            "W_sum": 0,
+            "A_sum": 0,
+            "P_sum": 0,
+            "V_sum": 0
+        }
+
         self._database = database
         self._cursor = database.cursor()
 
         self._dict_time = collections.defaultdict(list)
+        self._dict_course = collections.defaultdict(list)
 
         self._sum_time = collections.Counter()
         self._sum_room = collections.Counter()
@@ -25,6 +35,7 @@ class Solution:
             else:
                 self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
+            self.objective = self.cost()
 
     def _add_valid(self, course, day, period, room):
         # 1b
@@ -50,15 +61,15 @@ class Solution:
         # 1e
         # There are no conflicting courses scheduled at this time
         sql = '''SELECT DISTINCT c2.course as c2
-                    FROM courses AS c1
-                    LEFT JOIN relation AS r1 ON c1.course = r1.course
-                    INNER JOIN (
-                        SELECT ct.course, ct.lecturer, rt.curriculum from courses AS ct
-                        LEFT JOIN relation AS rt ON ct.course = rt.course
-                    ) AS c2
-                      ON c1.course != c2.course
-                      AND (c1.lecturer = c2.lecturer OR r1.curriculum = c2.curriculum)
-                    WHERE c1.course = ?'''
+                 FROM courses AS c1
+                 LEFT JOIN relation AS r1 ON c1.course = r1.course
+                 INNER JOIN (
+                     SELECT ct.course, ct.lecturer, rt.curriculum from courses AS ct
+                     LEFT JOIN relation AS rt ON ct.course = rt.course
+                 ) AS c2
+                   ON c1.course != c2.course
+                   AND (c1.lecturer = c2.lecturer OR r1.curriculum = c2.curriculum)
+                 WHERE c1.course = ?'''
         for (conflicting_course, ) in self._cursor.execute(sql, (course, )):
             for existing_combination in self._dict_time[day, period]:
                 if conflicting_course == existing_combination.course:
@@ -66,14 +77,110 @@ class Solution:
 
         return True
 
-    def _remove_valid(self):
-        return False
+    def _add_delta(self, course, day, period, room):
+        # V: exceeded room capacity
+        sql = '''SELECT courses.number_of_student - rooms.capacity
+                 FROM courses
+                 INNER JOIN rooms ON rooms.room = ?
+                 WHERE course = ?'''
+        V_sum = max(0, self._cursor.execute(sql, (room, course)).fetchone()[0])
 
-    def simulate_add(self, course, day, period, room):
+        # U: scheduled to few times
+        # This assumes the additon is valid, thus we already know there is
+        # space for one more course. Adding the course will improve the score.
+        U_sum = -1
+
+        # P: room stability
+        P_sum = 0
+        used_rooms = {c.room for c in self._dict_course[course]}
+        if (room not in used_rooms and len(used_rooms) > 0): P_sum = 1
+
+        # W: to few working days
+        sql = '''SELECT minimum_working_days
+                 FROM courses
+                 WHERE course = ?'''
+        day_spread = {c.day for c in self._dict_course[course]}
+        min_spread = self._cursor.execute(sql, (course, )).fetchone()[0]
+        W_sum = 0
+        if (len(day_spread) < min_spread and day not in day_spread): W_sum = -1
+
+        # A: curriculum continuity
+        A_sum = 0
+        q_sql = '''SELECT curriculum
+                   FROM relation
+                   WHERE course = ?'''
+        c_sql = '''SELECT course
+                   FROM relation
+                   WHERE curriculum = ?'''
+
+        for (q, ) in self._database.execute(q_sql, (course, )):
+            found_before_continuity = False
+            found_after_continuity = False
+            for (c, ) in self._cursor.execute(c_sql, (q, )):
+                # We can assume that there do not exists another course with
+                # curriculum q at (day, period) since that would be invalid.
+
+                # Check if course exists before
+                if self._sum_room[c, day, period - 1] > 0:
+                    found_before_continuity = True
+                    # If a penalty was added for period - 1, then remove that
+                    # penalty
+                    if self._sum_room[c, day, period - 2] == 0: A_sum -= 1
+
+                # Check if course exists after, A_sum -= 1 (maybe)
+                if self._sum_room[c, day, period + 1] > 0:
+                    found_after_continuity = True
+                    # If a penalty was added for period + 1, then remove that
+                    # penalty
+                    if self._sum_room[c, day, period + 2] == 0: A_sum -= 1
+
+                # Only one course is required for continuity
+                if found_before_continuity and found_after_continuity: break
+
+            # If no continuity was cound for curriculum q, then add a penalty
+            if not found_before_continuity and not found_after_continuity:
+                A_sum += 1
+
+        return {
+            "U_sum": U_sum,
+            "W_sum": W_sum,
+            "A_sum": A_sum,
+            "P_sum": P_sum,
+            "V_sum": V_sum
+        }
+
+    def simulate_add(self, course, day, period, room, full=False):
         if not self._add_valid(course, day, period, room):
             return None
 
-        return 0
+        penalties = self._add_delta(course, day, period, room)
+
+        return penalties if full else self._total_cost(**penalties)
+
+    def add(self, course, day, period, room, delta=None):
+        if delta is None:
+            delta = simulate_add(course, day, period, room)
+
+        if (delta is None):
+            raise Exception('bad combination (%d, %d, %d, %d)' % (
+                course, day, period, add))
+
+        # Create combination
+        combination = Combination(course, day, period, room)
+        self.schedule.append(combination)
+        self.objective += delta
+
+        # Maintain datastructures
+        self._sum_time[combination.course_room] += 1
+        self._sum_room[combination.course_time] += 1
+        self._sum_course[combination.time_room] += 1
+        self._sum_time_room[combination.course] += 1
+        self._sum_period_room[combination.course_day] += 1
+        self._dict_time[combination.time].append(combination)
+        self._dict_course[combination.course].append(combination)
+
+    def _remove_valid(self):
+        return False
 
     def export(self):
         return [c.all for c in self.schedule]
@@ -133,6 +240,7 @@ class Solution:
         self._sum_time_room.clear()
         self._sum_period_room.clear()
         self._dict_time.clear()
+        self._dict_course.clear()
 
         for combination in self.schedule:
             self._sum_time[combination.course_room] += 1
@@ -141,6 +249,7 @@ class Solution:
             self._sum_time_room[combination.course] += 1
             self._sum_period_room[combination.course_day] += 1
             self._dict_time[combination.time].append(combination)
+            self._dict_course[combination.course].append(combination)
 
     def missing_courses(self):
         cursor = self._database.cursor()
