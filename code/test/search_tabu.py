@@ -7,14 +7,12 @@ import solution
 import search
 
 database = dataset.Database.from_id(1)
-tabu = search.Tabu(database, solution.Solution(database, []), verbose=True)
+tabu = search.Tabu(database, solution.Solution(database, []))
 
 def test_one_iteration():
     tabu.search(0.001)
 
     assert_equal(tabu.iterations, 1)
-    print(tabu.solution.export())
-
     assert_equal(tabu.objective, 220)
     assert_equal(tabu.solution.export(), [
         (0, 0, 4, 0), (0, 0, 5, 0), (2, 2, 3, 0), (2, 2, 4, 0), (2, 2, 5, 0),
