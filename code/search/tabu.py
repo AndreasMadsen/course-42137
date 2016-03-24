@@ -7,6 +7,7 @@ class Tabu:
         self._verbose = verbose
 
         self._swap_tabu = set()
+        self._move_tabu = set()
         self._insert_tabu = set()
         self._remove_tabu = set()
 
@@ -54,25 +55,62 @@ class Tabu:
                             self.objective = self.solution.objective
                             solution_updated = True
 
-            # Switch courses
-            for combination_a in self._day_period_room():
-                for combination_b in self._day_period_room(*combination_a):
+            # Swap combinations
+            for combination_a in self.solution.existing_combinations():
+                for combination_b in self.solution.existing_combinations():
+                    # swap(A, B) is equal to swap(B, A) so test only one version
+                    if combination_a[0] == combination_b[0] or \
+                       combination_a[1] >= combination_b[1] or \
+                       combination_a[2] >= combination_b[2] or \
+                       combination_a[3] >= combination_b[3]:
+                        continue
+
                     # Check for tabu
-                    if combination_a + combination_b in self._swap_tabu:
+                    if combination_a[1:] + combination_b[1:] in self._swap_tabu:
                         continue
 
                     # Create simulated solution
                     simulation = self.solution.copy()
-                    simulation.swap(combination_a, combination_b)
+                    simulation.swap(combination_a[1:], combination_b[1:])
 
                     # If valid and better
                     if simulation.valid():
                         if simulation.cost() < self.objective:
                             # Add to tabu and update solution
-                            self._swap_tabu.add(combination_a + combination_b)
+                            self._swap_tabu.add(combination_a[1:] + combination_b[1:])
                             self.solution = simulation
                             self.objective = simulation.cost()
                             solution_updated = True
+
+                            # if A is swaped to B, it won't make sense to later
+                            # swap A to C. So stop searching for swaps with
+                            # A combination.
+                            break
+
+            # Move combination
+            for combination in self.solution.existing_combinations():
+                for time_period in self._day_period_room():
+                    # Check for tabu
+                    if combination[1:] + time_period in self._move_tabu:
+                        continue
+
+                    # Create simulated solution
+                    simulation = self.solution.copy()
+                    simulation.swap(combination[1:], time_period)
+
+                    # If valid and better
+                    if simulation.valid():
+                        if simulation.cost() < self.objective:
+                            # Add to tabu and update solution
+                            self._move_tabu.add(combination[1:] + time_period)
+                            self.solution = simulation
+                            self.objective = simulation.cost()
+                            solution_updated = True
+
+                            # if A is swaped to B, it won't make sense to later
+                            # swap A to C. So stop searching for swaps with
+                            # A combination.
+                            break
 
             # Remove existing course
             for combination in self.solution.existing_combinations():
