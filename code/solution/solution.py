@@ -37,7 +37,8 @@ class Solution:
             else:
                 self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
-            self.objective = self.cost()
+            self.penalties = self.cost_seperated()
+            self.objective = self._total_cost(**self.penalties)
 
     def _intialize_cost(self):
         # The only cost associated with an empty solution is unscheduled cost
@@ -292,6 +293,43 @@ class Solution:
         penalties = self._remove_delta(course, day, period, room)
 
         return penalties if full else self._total_cost(**penalties)
+
+    def mutate_remove(self, course, day, period, room, penalties=None):
+        if penalties is None:
+            penalties = self.simulate_remove(course, day, period, room, full=True)
+
+        if (penalties is None):
+            raise Exception('bad combination (%d, %d, %d, %d)' % (
+                course, day, period, add))
+
+        # Create combination and remove, this uses an custom __eq__ function
+        combination = Combination(course, day, period, room)
+        self.schedule.remove(combination)
+
+        # Update penalties and objective
+        self.penalties['U_sum'] += penalties['U_sum']
+        self.penalties['W_sum'] += penalties['W_sum']
+        self.penalties['A_sum'] += penalties['A_sum']
+        self.penalties['P_sum'] += penalties['P_sum']
+        self.penalties['V_sum'] += penalties['V_sum']
+        self.objective += self._total_cost(**penalties)
+
+        # Maintain datastructures
+        self._decrement_counter(self._sum_time, combination.course_room)
+        self._decrement_counter(self._sum_room, combination.course_time)
+        self._decrement_counter(self._sum_course, combination.time_room)
+        self._decrement_counter(self._sum_time_room, combination.course)
+        self._decrement_counter(self._sum_period_room, combination.course_day)
+        self._remove_from_defafultdict(self._dict_time, combination.time, combination)
+        self._remove_from_defafultdict(self._dict_course, combination.course, combination)
+
+    def _decrement_counter(self, counter, attribute):
+        counter[attribute] -= 1
+        if counter[attribute] == 0: del counter[attribute]
+
+    def _remove_from_defafultdict(self, obj, attribute, value):
+        obj[attribute].remove(value)
+        if len(obj[attribute]) == 0: del obj[attribute]
 
     def export(self):
         return [c.all for c in self.schedule]
