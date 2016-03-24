@@ -206,8 +206,92 @@ class Solution:
         self._dict_time[combination.time].append(combination)
         self._dict_course[combination.course].append(combination)
 
-    def _remove_valid(self):
+    def _remove_valid(self, course, day, period, room):
+        removed_combination = (course, day, period, room)
+        # A combination has to exists to be removed
+        for combination in self.schedule:
+            if combination.all == removed_combination:
+                return True
         return False
+
+    def _remove_delta(self, course, day, period, room):
+        # V: exceeded room capacity
+        sql = '''SELECT courses.number_of_student - rooms.capacity
+                 FROM courses
+                 INNER JOIN rooms ON rooms.room = ?
+                 WHERE course = ?'''
+        V_sum = -max(0, self._cursor.execute(sql, (room, course)).fetchone()[0])
+
+        # U: scheduled to few times
+        U_sum = 1
+
+        # P: room stability
+        P_sum = 0
+        all_rooms = {c.room for c in self._dict_course[course]}
+        used_rooms = [c.room for c in self._dict_course[course] if c.room == room]
+        if (len(all_rooms) > 1 and len(used_rooms) == 1): P_sum = -1
+
+        # W: to few working days
+        sql = '''SELECT minimum_working_days
+                 FROM courses
+                 WHERE course = ?'''
+        day_spread = {c.day for c in self._dict_course[course]}
+        used_days = [c.day for c in self._dict_course[course] if c.day == day]
+        min_spread = self._cursor.execute(sql, (course, )).fetchone()[0]
+        W_sum = 0
+        if (len(day_spread) <= min_spread and len(used_days) == 1):
+            W_sum = 1
+
+        # A: curriculum continuity
+        A_sum = 0
+        q_sql = '''SELECT curriculum
+                   FROM relation
+                   WHERE course = ?'''
+        c_sql = '''SELECT course
+                   FROM relation
+                   WHERE curriculum = ?'''
+
+        for (q, ) in self._database.execute(q_sql, (course, )):
+            found_before_continuity = False
+            found_after_continuity = False
+            for (c, ) in self._cursor.execute(c_sql, (q, )):
+                # We can assume that there do not exists another course with
+                # curriculum q at (day, period) since that would be invalid.
+
+                # Check if course exists before
+                if self._sum_room[c, day, period - 1] > 0:
+                    found_before_continuity = True
+                    # If a penalty was added for period - 1, then add penalty
+                    if self._sum_room[c, day, period - 2] == 0: A_sum += 1
+
+                # Check if course exists after, A_sum -= 1 (maybe)
+                if self._sum_room[c, day, period + 1] > 0:
+                    found_after_continuity = True
+                    # If a penalty was added for period + 1, then add penalty
+                    if self._sum_room[c, day, period + 2] == 0: A_sum += 1
+
+                # Only one course is required for continuity
+                if found_before_continuity and found_after_continuity: break
+
+            # If no continuity was cound for curriculum q, then remove penalty
+            if not found_before_continuity and not found_after_continuity:
+                A_sum -= 1
+
+        return {
+            "U_sum": U_sum,
+            "W_sum": W_sum,
+            "A_sum": A_sum,
+            "P_sum": P_sum,
+            "V_sum": V_sum
+        }
+
+    def simulate_remove(self, course, day, period, room, full=False):
+        if not self._remove_valid(course, day, period, room):
+            return None
+
+        penalties = self._remove_delta(course, day, period, room)
+
+        return penalties if full else self._total_cost(**penalties)
 
     def export(self):
         return [c.all for c in self.schedule]

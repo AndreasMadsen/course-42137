@@ -149,7 +149,6 @@ def test_diffrent_courses_same_curricula():
     s = solution.Solution(database, [
         (4, 0, 0, 1)
     ])
-
     assert_equal(s.valid(), True)
     validate_delta(s, (5, 0, 1, 1), {
         'A_sum': 0,
