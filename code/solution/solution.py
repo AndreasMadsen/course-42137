@@ -28,6 +28,8 @@ class Solution:
         self._sum_time_room = collections.Counter()
         self._sum_period_room = collections.Counter()
 
+        self._intialize_cost()
+
         # Add schedule list if provided
         if (schedule is not None and len(schedule) > 0):
             if isinstance(schedule[0], Combination):
@@ -36,6 +38,24 @@ class Solution:
                 self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
             self.objective = self.cost()
+
+    def _intialize_cost(self):
+        # The only cost associated with an empty solution is unscheduled cost
+        # and the minimum working days cost.
+
+        U_sum = 0
+        W_sum = 0
+        sql = '''SELECT number_of_lectures, minimum_working_days
+                 FROM courses'''
+        for (num_lectures, minimum_working_days) in self._cursor.execute(sql):
+            # There are not scheduled any courses
+            U_sum += num_lectures
+            # All courses have zero working days
+            W_sum += minimum_working_days
+
+        self.penalties['U_sum'] += U_sum
+        self.penalties['W_sum'] += W_sum
+        self.objective = self._total_cost(**self.penalties)
 
     def _add_valid(self, course, day, period, room):
         # 1b
@@ -157,18 +177,25 @@ class Solution:
 
         return penalties if full else self._total_cost(**penalties)
 
-    def add(self, course, day, period, room, delta=None):
-        if delta is None:
-            delta = simulate_add(course, day, period, room)
+    def mutate_add(self, course, day, period, room, penalties=None):
+        if penalties is None:
+            penalties = self.simulate_add(course, day, period, room, full=True)
 
-        if (delta is None):
+        if (penalties is None):
             raise Exception('bad combination (%d, %d, %d, %d)' % (
                 course, day, period, add))
 
         # Create combination
         combination = Combination(course, day, period, room)
         self.schedule.append(combination)
-        self.objective += delta
+
+        # Update penalties and objective
+        self.penalties['U_sum'] += penalties['U_sum']
+        self.penalties['W_sum'] += penalties['W_sum']
+        self.penalties['A_sum'] += penalties['A_sum']
+        self.penalties['P_sum'] += penalties['P_sum']
+        self.penalties['V_sum'] += penalties['V_sum']
+        self.objective += self._total_cost(**penalties)
 
         # Maintain datastructures
         self._sum_time[combination.course_room] += 1
