@@ -8,7 +8,7 @@ import solution
 database = dataset.Database.from_id(1)
 
 def validate_delta(solution, combination, final):
-    before = solution.cost_seperated().dict()
+    before = solution.penalties.dict()
     penalties = solution.simulate_add(*combination)
     assert_equal(penalties.dict(), {
         "U_sum": final['U_sum'] - before['U_sum'],
@@ -24,7 +24,6 @@ def test_assinged_twice_to_time():
         # course, day, period, room
         (0, 0, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(0, 0, 0, 1), None)
 
 def test_bad_assign_time():
@@ -32,7 +31,6 @@ def test_bad_assign_time():
     s = solution.Solution(database, [
         # course, day, period, room
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(0, 4, 0, 0), None)
 
 def test_two_different_times_and_rooms():
@@ -41,7 +39,6 @@ def test_two_different_times_and_rooms():
         # course, day, period, room
         (0, 0, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 0, 1, 1), {
         'A_sum': 0,
         'V_sum': 30,
@@ -57,7 +54,6 @@ def test_same_time_and_room():
         # course, day, period, room
         (0, 0, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(1, 0, 0, 0), None)
 
 def test_different_times_same_room():
@@ -66,7 +62,6 @@ def test_different_times_same_room():
         # course, day, period, room
         (0, 0, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 0, 1, 0), {
         'A_sum': 0,
         'V_sum': 0,
@@ -87,7 +82,6 @@ def test_too_many_assigned():
         (0, 1, 1, 0),
         (0, 1, 2, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(0, 2, 0, 0), None)
 
 def test_just_enogth_times():
@@ -100,7 +94,6 @@ def test_just_enogth_times():
         (0, 1, 0, 0),
         (0, 1, 1, 0)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 1, 2, 0), {
         'A_sum': 0,
         'V_sum': 0,
@@ -116,7 +109,6 @@ def test_same_curricula():
         # course, day, period, room
         (2, 1, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(1, 1, 0, 1), None)
 
 def test_same_teacher():
@@ -125,7 +117,6 @@ def test_same_teacher():
         # course, day, period, room
         (23, 0, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(8, 0, 0, 1), None)
 
 def test_different_teacher_and_curricula():
@@ -134,7 +125,6 @@ def test_different_teacher_and_curricula():
         # course, day, period, room
         (29, 0, 0, 0)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 0, 0, 1), {
         'A_sum': 4,
         'V_sum': 30,
@@ -149,7 +139,6 @@ def test_diffrent_courses_same_curricula():
     s = solution.Solution(database, [
         (4, 0, 0, 1)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (5, 0, 1, 1), {
         'A_sum': 0,
         'V_sum': 0,
@@ -165,7 +154,6 @@ def test_different_courses_same_curricula_tm2():
         (2, 3, 0, 0),
         (3, 3, 1, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_add(3, 3, 2, 0).dict(), {
         'V_sum': 0,
         'W_sum': 0,

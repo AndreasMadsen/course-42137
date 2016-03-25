@@ -8,7 +8,7 @@ import solution
 database = dataset.Database.from_id(1)
 
 def validate_delta(solution, combination, final):
-    before = solution.cost_seperated().dict()
+    before = solution.penalties.dict()
     penalties = solution.simulate_remove(*combination)
     assert_equal(penalties.dict(), {
         "U_sum": final['U_sum'] - before['U_sum'],
@@ -33,7 +33,6 @@ def test_two_different_times_and_rooms():
         (0, 0, 0, 0),
         (0, 0, 1, 1)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 0, 1, 1), {
         'A_sum': 2,
         'V_sum': 0,
@@ -50,7 +49,6 @@ def test_different_times_same_room():
         (0, 0, 0, 0),
         (0, 0, 1, 0)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 0, 1, 0), {
         'A_sum': 2,
         'V_sum': 0,
@@ -71,7 +69,6 @@ def test_just_enogth_times():
         (0, 1, 1, 0),
         (0, 1, 2, 0)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 1, 2, 0), {
         'A_sum': 0,
         'V_sum': 0,
@@ -88,7 +85,6 @@ def test_different_teacher_and_curricula():
         (29, 0, 0, 0),
         (0, 0, 0, 1)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (0, 0, 0, 1), {
         'A_sum': 2,
         'V_sum': 0,
@@ -104,7 +100,6 @@ def test_diffrent_courses_same_curricula():
         (4, 0, 0, 1),
         (5, 0, 1, 1)
     ])
-    assert_equal(s.valid(), True)
     validate_delta(s, (5, 0, 1, 1), {
         'A_sum': 1,
         'V_sum': 0,
@@ -121,7 +116,6 @@ def test_different_courses_same_curricula_tm2():
         (3, 3, 1, 0),
         (3, 3, 2, 0)
     ])
-    assert_equal(s.valid(), True)
     assert_equal(s.simulate_remove(3, 3, 2, 0).dict(), {
         'V_sum': 0,
         'W_sum': 0,

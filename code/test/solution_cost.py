@@ -15,7 +15,7 @@ def test_two_different_times_and_rooms():
         (0, 0, 1, 1)
     ])
 
-    assert_equal(s.cost_seperated().dict(), {
+    assert_equal(s.penalties.dict(), {
         'A_sum': 0,
         'V_sum': 30,
         'U_sum': 158,
@@ -31,7 +31,7 @@ def test_two_different_times_but_same_room():
         (0, 0, 1, 0)
     ])
 
-    assert_equal(s.cost_seperated().dict(), {
+    assert_equal(s.penalties.dict(), {
         'A_sum': 0,
         'V_sum': 0,
         'U_sum': 158,
@@ -51,7 +51,7 @@ def test_assigned_just_enogth_times():
         (0, 1, 2, 0)
     ])
 
-    assert_equal(s.cost_seperated().dict(), {
+    assert_equal(s.penalties.dict(), {
         'A_sum': 0,
         'V_sum': 0,
         'U_sum': 154,
@@ -67,7 +67,7 @@ def test_diffrent_leacher_and_curricula():
         (0, 0, 0, 1)
     ])
 
-    assert_equal(s.cost_seperated().dict(), {
+    assert_equal(s.penalties.dict(), {
         'A_sum': 4,
         'V_sum': 30,
         'U_sum': 158,
@@ -82,7 +82,7 @@ def test_diffrent_courses_same_curricula():
         (5, 0, 1, 1)
     ])
 
-    assert_equal(s.cost_seperated().dict(), {
+    assert_equal(s.penalties.dict(), {
         'A_sum': 0,
         'V_sum': 0,
         'U_sum': 158,
