@@ -22,7 +22,7 @@ orignal_schedule = sorted([
 def test_working_swap():
     # More working days for course 1
     s = solution.Solution(database, list(orignal_schedule))
-    old_penalties = dict(s.penalties)
+    old_penalties = s.penalties.copy()
     old_objective = s.objective
 
     # Swap left
@@ -32,5 +32,5 @@ def test_working_swap():
 
     # Expect same schedule
     assert_equal(sorted(s.export()), orignal_schedule)
-    assert_equal(s.penalties, old_penalties)
+    assert_equal(s.penalties.dict(), old_penalties.dict())
     assert_equal(s.objective, old_objective)

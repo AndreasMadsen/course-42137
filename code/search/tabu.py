@@ -13,7 +13,6 @@ class Tabu:
 
         self.iterations = 0
         self.solution = initial
-        self.objective = self.solution.cost()
 
     def _print(self, *msg):
         if (self._verbose): print(*msg)
@@ -23,9 +22,6 @@ class Tabu:
             for p in range(period + 1, self._database.periods_per_day):
                 for r in range(room + 1, self._database.rooms):
                     yield (d, p, r)
-
-    def _total_cost(self, U_sum, W_sum, A_sum, P_sum, V_sum):
-        return 10 * U_sum + 5 * W_sum + 2 * A_sum + P_sum + V_sum
 
     def search(self, max_duration):
         max_time = time.clock() + max_duration
@@ -44,15 +40,14 @@ class Tabu:
                         continue
 
                     # Create simulated solution
-                    penalties = self.solution.simulate_add(*combination, full=True)
+                    penalties = self.solution.simulate_add(*combination)
 
                     # If valid and better
                     if penalties is not None:
-                        if self._total_cost(**penalties) < 0:
+                        if penalties.cost() < 0:
                             # Add to tabu and update solution
                             self._insert_tabu.add(combination)
                             self.solution.mutate_add(*combination, penalties=penalties)
-                            self.objective = self.solution.objective
                             solution_updated = True
 
             # Swap combinations
@@ -70,16 +65,17 @@ class Tabu:
                         continue
 
                     # Create simulated solution
-                    simulation = self.solution.copy()
-                    simulation.swap(combination_a[1:], combination_b[1:])
+                    penalties = self.solution.simulate_swap(combination_a, combination_b)
 
                     # If valid and better
-                    if simulation.valid():
-                        if simulation.cost() < self.objective:
+                    if penalties is not None:
+                        if penalties.cost() < 0:
                             # Add to tabu and update solution
                             self._swap_tabu.add(combination_a[1:] + combination_b[1:])
-                            self.solution = simulation
-                            self.objective = simulation.cost()
+                            self.solution.mutate_swap(
+                                combination_a, combination_b,
+                                penalties=penalties
+                            )
                             solution_updated = True
 
                             # if A is swaped to B, it won't make sense to later
@@ -100,11 +96,10 @@ class Tabu:
 
                     # If valid and better
                     if simulation.valid():
-                        if simulation.cost() < self.objective:
+                        if simulation.cost() < self.solution.objective:
                             # Add to tabu and update solution
                             self._move_tabu.add(combination[1:] + time_period)
                             self.solution = simulation
-                            self.objective = simulation.cost()
                             solution_updated = True
 
                             # if A is swaped to B, it won't make sense to later
@@ -119,15 +114,14 @@ class Tabu:
                     continue
 
                 # Create simulated solution
-                penalties = self.solution.simulate_remove(*combination, full=True)
+                penalties = self.solution.simulate_remove(*combination)
 
                 # If valid and better
                 if penalties is not None:
-                    if self._total_cost(**penalties) < 0:
+                    if penalties.cost() < 0:
                         # Add to tabu and update solution
                         self._remove_tabu.add(combination)
                         self.solution.mutate_remove(*combination, penalties=penalties)
-                        self.objective = self.solution.objective
                         solution_updated = True
 
             self.iterations += 1

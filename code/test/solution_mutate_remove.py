@@ -26,7 +26,7 @@ def validate_remove(schedule):
         s.mutate_remove(*combination)
 
     # Validate penalties
-    assert_equal(s.penalties, initial_penalties)
+    assert_equal(s.penalties.dict(), initial_penalties)
     assert_equal(s.objective, total_cost(**initial_penalties))
 
 def test_empty_solution():

@@ -3,18 +3,20 @@ import collections
 import textwrap
 
 from solution.combination import Combination
+from solution.penalties import Penalties
+
+def _decrement_counter(counter, attribute):
+    counter[attribute] -= 1
+    if counter[attribute] == 0: del counter[attribute]
+
+def _remove_from_defafultdict(obj, attribute, value):
+    obj[attribute].remove(value)
+    if len(obj[attribute]) == 0: del obj[attribute]
 
 class Solution:
     def __init__(self, database, schedule=None):
         self.schedule = []
-        self.objective = 0
-        self.penalties = {
-            "U_sum": 0,
-            "W_sum": 0,
-            "A_sum": 0,
-            "P_sum": 0,
-            "V_sum": 0
-        }
+        self.penalties = Penalties()
 
         self._database = database
         self._cursor = database.cursor()
@@ -38,7 +40,10 @@ class Solution:
                 self.schedule = [Combination(*item) for item in schedule]
             self._precalc_sums()
             self.penalties = self.cost_seperated()
-            self.objective = self._total_cost(**self.penalties)
+
+    @property
+    def objective(self):
+        return self.penalties.cost()
 
     def _intialize_cost(self):
         # The only cost associated with an empty solution is unscheduled cost
@@ -54,17 +59,14 @@ class Solution:
             # All courses have zero working days
             W_sum += minimum_working_days
 
-        self.penalties['U_sum'] += U_sum
-        self.penalties['W_sum'] += W_sum
-        self.objective = self._total_cost(**self.penalties)
+        self.penalties.U_sum += U_sum
+        self.penalties.W_sum += W_sum
 
-    def _decrement_counter(self, counter, attribute):
-        counter[attribute] -= 1
-        if counter[attribute] == 0: del counter[attribute]
+    def export(self):
+        return [c.all for c in self.schedule]
 
-    def _remove_from_defafultdict(self, obj, attribute, value):
-        obj[attribute].remove(value)
-        if len(obj[attribute]) == 0: del obj[attribute]
+    def copy(self):
+        return Solution(self._database, schedule=self.schedule)
 
     def _add_valid(self, course, day, period, room):
         # 1b
@@ -180,13 +182,7 @@ class Solution:
             if not found_tm1_continuity and not found_tp1_continuity:
                 A_sum += 1
 
-        return {
-            "U_sum": U_sum,
-            "W_sum": W_sum,
-            "A_sum": A_sum,
-            "P_sum": P_sum,
-            "V_sum": V_sum
-        }
+        return Penalties(U_sum, W_sum, A_sum, P_sum, V_sum)
 
     def _update_add(self, course, day, period, room):
         # Create combination
@@ -202,17 +198,15 @@ class Solution:
         self._dict_time[combination.time].append(combination)
         self._dict_course[combination.course].append(combination)
 
-    def simulate_add(self, course, day, period, room, full=False):
+    def simulate_add(self, course, day, period, room):
         if not self._add_valid(course, day, period, room):
             return None
 
-        penalties = self._add_delta(course, day, period, room)
-
-        return penalties if full else self._total_cost(**penalties)
+        return self._add_delta(course, day, period, room)
 
     def mutate_add(self, course, day, period, room, penalties=None):
         if penalties is None:
-            penalties = self.simulate_add(course, day, period, room, full=True)
+            penalties = self.simulate_add(course, day, period, room)
 
         if (penalties is None):
             raise Exception('bad combination (%d, %d, %d, %d)' % (
@@ -222,19 +216,16 @@ class Solution:
         self._update_add(course, day, period, room)
 
         # Update penalties and objective
-        self.penalties['U_sum'] += penalties['U_sum']
-        self.penalties['W_sum'] += penalties['W_sum']
-        self.penalties['A_sum'] += penalties['A_sum']
-        self.penalties['P_sum'] += penalties['P_sum']
-        self.penalties['V_sum'] += penalties['V_sum']
-        self.objective += self._total_cost(**penalties)
+        self.penalties += penalties
 
     def _remove_valid(self, course, day, period, room):
         removed_combination = (course, day, period, room)
+
         # A combination has to exists to be removed
         for combination in self.schedule:
             if combination.all == removed_combination:
                 return True
+
         return False
 
     def _remove_delta(self, course, day, period, room):
@@ -312,13 +303,7 @@ class Solution:
             if not found_tm1_continuity and not found_tp1_continuity:
                 A_sum -= 1
 
-        return {
-            "U_sum": U_sum,
-            "W_sum": W_sum,
-            "A_sum": A_sum,
-            "P_sum": P_sum,
-            "V_sum": V_sum
-        }
+        return Penalties(U_sum, W_sum, A_sum, P_sum, V_sum)
 
     def _update_remove(self, course, day, period, room):
         # Create combination and remove, this uses an custom __eq__ function
@@ -326,25 +311,23 @@ class Solution:
         self.schedule.remove(combination)
 
         # Maintain datastructures
-        self._decrement_counter(self._sum_time, combination.course_room)
-        self._decrement_counter(self._sum_room, combination.course_time)
-        self._decrement_counter(self._sum_course, combination.time_room)
-        self._decrement_counter(self._sum_time_room, combination.course)
-        self._decrement_counter(self._sum_period_room, combination.course_day)
-        self._remove_from_defafultdict(self._dict_time, combination.time, combination)
-        self._remove_from_defafultdict(self._dict_course, combination.course, combination)
+        _decrement_counter(self._sum_time, combination.course_room)
+        _decrement_counter(self._sum_room, combination.course_time)
+        _decrement_counter(self._sum_course, combination.time_room)
+        _decrement_counter(self._sum_time_room, combination.course)
+        _decrement_counter(self._sum_period_room, combination.course_day)
+        _remove_from_defafultdict(self._dict_time, combination.time, combination)
+        _remove_from_defafultdict(self._dict_course, combination.course, combination)
 
-    def simulate_remove(self, course, day, period, room, full=False):
+    def simulate_remove(self, course, day, period, room):
         if not self._remove_valid(course, day, period, room):
             return None
 
-        penalties = self._remove_delta(course, day, period, room)
-
-        return penalties if full else self._total_cost(**penalties)
+        return self._remove_delta(course, day, period, room)
 
     def mutate_remove(self, course, day, period, room, penalties=None):
         if penalties is None:
-            penalties = self.simulate_remove(course, day, period, room, full=True)
+            penalties = self.simulate_remove(course, day, period, room)
 
         if (penalties is None):
             raise Exception('bad combination (%d, %d, %d, %d)' % (
@@ -354,34 +337,22 @@ class Solution:
         self._update_remove(course, day, period, room)
 
         # Update penalties and objective
-        self.penalties['U_sum'] += penalties['U_sum']
-        self.penalties['W_sum'] += penalties['W_sum']
-        self.penalties['A_sum'] += penalties['A_sum']
-        self.penalties['P_sum'] += penalties['P_sum']
-        self.penalties['V_sum'] += penalties['V_sum']
-        self.objective += self._total_cost(**penalties)
+        self.penalties += penalties
 
-    def _add_penalties(self, target, penalties):
-        target['U_sum'] += penalties['U_sum']
-        target['W_sum'] += penalties['W_sum']
-        target['A_sum'] += penalties['A_sum']
-        target['P_sum'] += penalties['P_sum']
-        target['V_sum'] += penalties['V_sum']
-
-    def simulate_swap(self, combination_a, combination_b, full=False):
+    def simulate_swap(self, combination_a, combination_b):
         # Create new combinations
         a_on_b = (combination_a[0], ) + combination_b[1:]
         b_on_a = (combination_b[0], ) + combination_a[1:]
 
         # Try removing a
-        remove_a = self.simulate_remove(*combination_a, full=True)
+        remove_a = self.simulate_remove(*combination_a)
         if (remove_a is None):
             return None
         else:
             self._update_remove(*combination_a)
 
         # Try removing b and revert -a if failed
-        remove_b = self.simulate_remove(*combination_b, full=True)
+        remove_b = self.simulate_remove(*combination_b)
         if (remove_b is None):
             self._update_add(*combination_a)
             return None
@@ -389,7 +360,7 @@ class Solution:
             self._update_remove(*combination_b)
 
         # Try adding a_on_b and revert -a-b if failed
-        add_a_on_b = self.simulate_add(*a_on_b, full=True)
+        add_a_on_b = self.simulate_add(*a_on_b)
         if (add_a_on_b is None):
             self._update_add(*combination_b)
             self._update_add(*combination_a)
@@ -398,7 +369,7 @@ class Solution:
             self._update_add(*a_on_b)
 
         # Try adding b_on_a and revert -a-b+a_on_b if failed
-        add_b_on_a = self.simulate_add(*b_on_a, full=True)
+        add_b_on_a = self.simulate_add(*b_on_a)
         if (add_b_on_a is None):
             self._update_remove(*a_on_b)
             self._update_add(*combination_b)
@@ -411,17 +382,16 @@ class Solution:
         self._update_add(*combination_a)
 
         # Sum up the penalties
-        penalties = {"U_sum": 0, "W_sum": 0, "A_sum": 0, "P_sum": 0, "V_sum": 0}
-        self._add_penalties(penalties, remove_a)
-        self._add_penalties(penalties, remove_b)
-        self._add_penalties(penalties, add_a_on_b)
-        self._add_penalties(penalties, add_b_on_a)
-
-        return penalties if full else self._total_cost(**penalties)
+        penalties = Penalties()
+        penalties += remove_a
+        penalties += remove_b
+        penalties += add_a_on_b
+        penalties += add_b_on_a
+        return penalties
 
     def mutate_swap(self, combination_a, combination_b, penalties=None):
         if penalties is None:
-            penalties = self.simulate_swap(combination_a, combination_b, full=True)
+            penalties = self.simulate_swap(combination_a, combination_b)
 
         if (penalties is None):
             raise Exception('bad combination swap((%d, %d, %d, %d), (%d, %d, %d, %d))' % (
@@ -438,18 +408,7 @@ class Solution:
         self._update_add(*b_on_a)
 
         # Update penalties and objective
-        self.penalties['U_sum'] += penalties['U_sum']
-        self.penalties['W_sum'] += penalties['W_sum']
-        self.penalties['A_sum'] += penalties['A_sum']
-        self.penalties['P_sum'] += penalties['P_sum']
-        self.penalties['V_sum'] += penalties['V_sum']
-        self.objective += self._total_cost(**penalties)
-
-    def export(self):
-        return [c.all for c in self.schedule]
-
-    def copy(self):
-        return Solution(self._database, schedule=self.schedule)
+        self.penalties += penalties
 
     def insert(self, combination):
         self.schedule.append(Combination(*combination))
@@ -672,23 +631,13 @@ class Solution:
         P_sum = self._room_stability(cursor)
         V_sum = self._room_capacity(cursor)
 
-        return {
-            "U_sum": U_sum,
-            "W_sum": W_sum,
-            "A_sum": A_sum,
-            "P_sum": P_sum,
-            "V_sum": V_sum
-        }
-
-    def _total_cost(self, U_sum, W_sum, A_sum, P_sum, V_sum):
-        return 10 * U_sum + 5 * W_sum + 2 * A_sum + P_sum + V_sum
+        return Penalties(U_sum, W_sum, A_sum, P_sum, V_sum)
 
     def cost(self):
-        return self._total_cost(**self.cost_seperated())
+        return self.cost_seperated().cost()
 
     def __str__(self):
-        seperated = self.cost_seperated()
-        cost = self._total_cost(**seperated)
+        penalties = self.cost_seperated()
 
         header = textwrap.dedent("""\
         Unscheduled {U_sum}
@@ -697,7 +646,7 @@ class Solution:
         CurriculumCompactness {A_sum}
         RoomStability {P_sum}
         Objective {cost}
-        """.format(cost=cost, **seperated))
+        """.format(cost=penalties.cost(), **penalties.dict()))
 
         body = ""
         for combination in self.schedule:

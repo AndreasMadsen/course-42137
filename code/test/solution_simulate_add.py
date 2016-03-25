@@ -8,9 +8,9 @@ import solution
 database = dataset.Database.from_id(1)
 
 def validate_delta(solution, combination, final):
-    before = solution.cost_seperated()
-    delta = solution.simulate_add(*combination, full=True)
-    assert_equal(delta, {
+    before = solution.cost_seperated().dict()
+    penalties = solution.simulate_add(*combination)
+    assert_equal(penalties.dict(), {
         "U_sum": final['U_sum'] - before['U_sum'],
         "W_sum": final['W_sum'] - before['W_sum'],
         "A_sum": final['A_sum'] - before['A_sum'],
@@ -49,7 +49,7 @@ def test_two_different_times_and_rooms():
         'W_sum': 105,
         'P_sum': 1
     })
-    assert_equal(s.simulate_add(0, 0, 1, 1), 17)
+    assert_equal(s.simulate_add(0, 0, 1, 1).cost(), 17)
 
 def test_same_time_and_room():
     # course 0 and 1 is assigned to the same time and room
@@ -74,7 +74,7 @@ def test_different_times_same_room():
         'W_sum': 105,
         'P_sum': 0
     })
-    assert_equal(s.simulate_add(0, 0, 1, 0), -14)
+    assert_equal(s.simulate_add(0, 0, 1, 0).cost(), -14)
 
 def test_too_many_assigned():
     # course 0 is assigned too many times
@@ -108,7 +108,7 @@ def test_just_enogth_times():
         'W_sum': 104,
         'P_sum': 0
     })
-    assert_equal(s.simulate_add(0, 1, 2, 0), -10)
+    assert_equal(s.simulate_add(0, 1, 2, 0).cost(), -10)
 
 def test_same_curricula():
     # course 2 and 1 belong to the same curricula
@@ -142,7 +142,7 @@ def test_different_teacher_and_curricula():
         'W_sum': 104,
         'P_sum': 0
     })
-    assert_equal(s.simulate_add(0, 0, 0, 1), 19)
+    assert_equal(s.simulate_add(0, 0, 0, 1).cost(), 19)
 
 def test_diffrent_courses_same_curricula():
     # course 4 and 5 belong to the same curricula thus they are adjacent
@@ -157,7 +157,7 @@ def test_diffrent_courses_same_curricula():
         'W_sum': 104,
         'P_sum': 0
     })
-    assert_equal(s.simulate_add(5, 0, 1, 1), -17)
+    assert_equal(s.simulate_add(5, 0, 1, 1).cost(), -17)
 
 def test_different_courses_same_curricula_tm2():
     # course 2 and 3 belong to same curricula, but it is another course at t-2
@@ -166,11 +166,11 @@ def test_different_courses_same_curricula_tm2():
         (3, 3, 1, 0)
     ])
     assert_equal(s.valid(), True)
-    assert_equal(s.simulate_add(3, 3, 2, 0, full=True), {
+    assert_equal(s.simulate_add(3, 3, 2, 0).dict(), {
         'V_sum': 0,
         'W_sum': 0,
         'P_sum': 0,
         'U_sum': -1,
         'A_sum': 0
     })
-    assert_equal(s.simulate_add(3, 3, 2, 0), -10)
+    assert_equal(s.simulate_add(3, 3, 2, 0).cost(), -10)

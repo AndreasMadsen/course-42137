@@ -19,7 +19,7 @@ def validate_additions(schedule, expected_penalties):
         s.mutate_add(*combination)
 
     # Validate penalties
-    assert_equal(s.penalties, expected_penalties)
+    assert_equal(s.penalties.dict(), expected_penalties)
     assert_equal(s.objective, total_cost(**expected_penalties))
 
 def test_empty_solution():

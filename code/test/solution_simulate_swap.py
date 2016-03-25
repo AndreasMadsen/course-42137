@@ -45,7 +45,7 @@ def test_redudant_swap():
     s = solution.Solution(database, list(orignal_schedule))
 
     # Swap course 0 with 0 should work but be redundant
-    assert_equal(s.simulate_swap((0, 0, 0, 0), (0, 0, 1, 0)), 0)
+    assert_equal(s.simulate_swap((0, 0, 0, 0), (0, 0, 1, 0)).cost(), 0)
     assert_equal(sorted(s.export()), orignal_schedule)
 
 def test_working_swap():
@@ -53,7 +53,7 @@ def test_working_swap():
     s = solution.Solution(database, list(orignal_schedule))
 
     # Swap left
-    assert_equal(s.simulate_swap((2, 1, 0, 0), (1, 4, 2, 0), full=True), {
+    assert_equal(s.simulate_swap((2, 1, 0, 0), (1, 4, 2, 0)).dict(), {
         'U_sum': 0,
         'W_sum': -1,
         'P_sum': 0,
@@ -63,7 +63,7 @@ def test_working_swap():
     assert_equal(sorted(s.export()), orignal_schedule)
 
     # Swap right
-    assert_equal(s.simulate_swap((1, 4, 2, 0), (2, 1, 0, 0), full=True), {
+    assert_equal(s.simulate_swap((1, 4, 2, 0), (2, 1, 0, 0)).dict(), {
         'U_sum': 0,
         'W_sum': -1,
         'P_sum': 0,
