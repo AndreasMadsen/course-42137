@@ -85,21 +85,23 @@ class Tabu:
 
             # Move combination
             for combination in self.solution.existing_combinations():
-                for time_period in self._day_period_room():
+                for destination in self._day_period_room():
                     # Check for tabu
-                    if combination[1:] + time_period in self._move_tabu:
+                    if combination[1:] + destination in self._move_tabu:
                         continue
 
                     # Create simulated solution
-                    simulation = self.solution.copy()
-                    simulation.swap(combination[1:], time_period)
+                    penalties = self.solution.simulate_move(combination, destination)
 
                     # If valid and better
-                    if simulation.valid():
-                        if simulation.cost() < self.solution.objective:
+                    if penalties is not None:
+                        if penalties.cost() < 0:
                             # Add to tabu and update solution
-                            self._move_tabu.add(combination[1:] + time_period)
-                            self.solution = simulation
+                            self._move_tabu.add(combination[1:] + destination)
+                            self.solution.mutate_move(
+                                combination, destination,
+                                penalties=penalties
+                            )
                             solution_updated = True
 
                             # if A is swaped to B, it won't make sense to later

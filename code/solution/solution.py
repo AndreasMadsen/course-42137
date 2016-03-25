@@ -401,11 +401,55 @@ class Solution:
         a_on_b = (combination_a[0], ) + combination_b[1:]
         b_on_a = (combination_b[0], ) + combination_a[1:]
 
-        # Create combination and remove, this uses an custom __eq__ function
+        # Create combination and remove
         self._update_remove(*combination_a)
         self._update_remove(*combination_b)
         self._update_add(*a_on_b)
         self._update_add(*b_on_a)
+
+        # Update penalties and objective
+        self.penalties += penalties
+
+    def simulate_move(self, combination, destination):
+        # create new combination
+        new_combination = (combination[0], ) + destination
+
+        # Try removing a
+        remove = self.simulate_remove(*combination)
+        if (remove is None):
+            return None
+        else:
+            self._update_remove(*combination)
+
+        # Try adding the new combination, revert removal if failed
+        add = self.simulate_add(*new_combination)
+        if (add is None):
+            self._update_add(*combination)
+            return None
+
+        # Revert all operations
+        self._update_add(*combination)
+
+        # Sum up the penalties
+        penalties = Penalties()
+        penalties += remove
+        penalties += add
+        return penalties
+
+    def mutate_move(self, combination, destination, penalties=None):
+        if penalties is None:
+            penalties = self.simulate_move(combination, destination)
+
+        if (penalties is None):
+            raise Exception('bad combination move((%d, %d, %d, %d), (%d, %d, %d))' % (
+                combination + destination))
+
+        # Create new combination
+        new_combination = (combination[0], ) + destination
+
+        # Create combination and remove
+        self._update_remove(*combination)
+        self._update_add(*new_combination)
 
         # Update penalties and objective
         self.penalties += penalties
