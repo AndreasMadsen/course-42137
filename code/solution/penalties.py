@@ -22,6 +22,14 @@ class Penalties:
     def cost(self):
         return 10 * self.U_sum + 5 * self.W_sum + 2 * self.A_sum + self.P_sum + self.V_sum
 
+    # defines self == other
+    def __eq__(self, other):
+        return isinstance(other, Penalties) and (
+            self.U_sum == other.U_sum and self.W_sum == other.W_sum and
+            self.A_sum == other.A_sum and self.P_sum == other.P_sum and
+            self.V_sum == other.V_sum
+        )
+
     # defines self += other
     def __iadd__(self, other):
         if isinstance(other, Penalties):

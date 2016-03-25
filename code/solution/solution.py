@@ -207,7 +207,7 @@ class Solution:
 
         if (penalties is None):
             raise Exception('bad combination (%d, %d, %d, %d)' % (
-                course, day, period, add))
+                course, day, period, room))
 
         # Update datastructures
         self._update_add(course, day, period, room)
@@ -328,7 +328,7 @@ class Solution:
 
         if (penalties is None):
             raise Exception('bad combination (%d, %d, %d, %d)' % (
-                course, day, period, add))
+                course, day, period, room))
 
         # Update datastructures
         self._update_remove(course, day, period, room)

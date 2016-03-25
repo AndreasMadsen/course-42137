@@ -7,8 +7,11 @@ thisdir = path.dirname(path.realpath(__file__))
 datasetdir = path.join(thisdir, 'TestDataUTT')
 
 class Database:
-    def __init__(self, basic, courses, lecturers, rooms, curricula, relation,
-                 unavailability):
+    def __init__(self,
+                 basic, courses, lecturers, rooms, curricula, relation, unavailability,
+                 directory=None):
+
+        self.directory = directory
         self._database = sqlite3.connect(':memory:')
         self._setup_tables()
 
@@ -48,7 +51,8 @@ class Database:
             lecturers=path.join(database_files, 'lecturers.utt'),
             relation=path.join(database_files, 'relation.utt'),
             rooms=path.join(database_files, 'rooms.utt'),
-            unavailability=path.join(database_files, 'unavailability.utt')
+            unavailability=path.join(database_files, 'unavailability.utt'),
+            directory=database_files
         )
 
     def _setup_tables(self):
