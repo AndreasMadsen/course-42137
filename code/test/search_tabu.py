@@ -10,8 +10,7 @@ database = dataset.Database.from_id(1)
 tabu = search.Tabu(database, solution.Solution(database, []))
 
 def test_one_iteration():
-    """
-    tabu.search(0.001)
+    tabu.search(0.00001)
 
     assert_equal(tabu.iterations, 1)
     assert_equal(tabu.solution.objective, 304)
@@ -51,4 +50,3 @@ def test_one_iteration():
         (23, 2, 0, 4), (23, 2, 1, 2), (28, 2, 5, 5), (23, 2, 2, 5),
         (19, 4, 4, 4), (23, 3, 3, 5), (29, 4, 5, 2), (23, 3, 4, 4)
     ])
-    """
