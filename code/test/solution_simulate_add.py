@@ -158,3 +158,19 @@ def test_diffrent_courses_same_curricula():
         'P_sum': 0
     })
     assert_equal(s.simulate_add(5, 0, 1, 1), -17)
+
+def test_different_courses_same_curricula_tm2():
+    # course 2 and 3 belong to same curricula, but it is another course at t-2
+    s = solution.Solution(database, schedule=[
+        (2, 3, 0, 0),
+        (3, 3, 1, 0)
+    ])
+    assert_equal(s.valid(), True)
+    assert_equal(s.simulate_add(3, 3, 2, 0, full=True), {
+        'V_sum': 0,
+        'W_sum': 0,
+        'P_sum': 0,
+        'U_sum': -1,
+        'A_sum': 0
+    })
+    assert_equal(s.simulate_add(3, 3, 2, 0), -10)

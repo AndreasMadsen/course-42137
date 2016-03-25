@@ -104,3 +104,17 @@ def test_diffrent_courses_same_curricula():
         'W_sum': 104,
         'P_sum': 0
     })
+
+def test_different_courses_same_curricula_tm2():
+    # course 2 and 3 belong to same curricula, but it is another course at t-2
+    validate_additions([
+        (2, 3, 0, 0),
+        (3, 3, 1, 0),
+        (3, 3, 2, 0)
+    ], {
+        'U_sum': 157,
+        'A_sum': 1,
+        'P_sum': 0,
+        'V_sum': 0,
+        'W_sum': 104
+    })

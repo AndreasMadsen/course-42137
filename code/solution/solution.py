@@ -143,31 +143,41 @@ class Solution:
                    WHERE curriculum = ?'''
 
         for (q, ) in self._database.execute(q_sql, (course, )):
-            found_before_continuity = False
-            found_after_continuity = False
+            found_tm2_continuity = False
+            found_tm1_continuity = False
+            found_tp1_continuity = False
+            found_tp2_continuity = False
+
             for (c, ) in self._cursor.execute(c_sql, (q, )):
                 # We can assume that there do not exists another course with
                 # curriculum q at (day, period) since that would be invalid.
 
-                # Check if course exists before
+                if self._sum_room[c, day, period - 2] > 0:
+                    found_tm2_continuity = True
+
                 if self._sum_room[c, day, period - 1] > 0:
-                    found_before_continuity = True
-                    # If a penalty was added for period - 1, then remove that
-                    # penalty
-                    if self._sum_room[c, day, period - 2] == 0: A_sum -= 1
+                    found_tm1_continuity = True
 
-                # Check if course exists after, A_sum -= 1 (maybe)
                 if self._sum_room[c, day, period + 1] > 0:
-                    found_after_continuity = True
-                    # If a penalty was added for period + 1, then remove that
-                    # penalty
-                    if self._sum_room[c, day, period + 2] == 0: A_sum -= 1
+                    found_tp1_continuity = True
 
-                # Only one course is required for continuity
-                if found_before_continuity and found_after_continuity: break
+                if self._sum_room[c, day, period + 2] > 0:
+                    found_tp2_continuity = True
 
-            # If no continuity was cound for curriculum q, then add a penalty
-            if not found_before_continuity and not found_after_continuity:
+            # Check if course exists before.
+            # If a penalty was added for period - 1, then remove that
+            # penalty
+            if found_tm1_continuity and not found_tm2_continuity:
+                A_sum -= 1
+
+            # Check if course exists after.
+            # If a penalty was added for period + 1, then remove that
+            # penalty
+            if found_tp1_continuity and not found_tp2_continuity:
+                A_sum -= 1
+
+            # If no continuity was found for curriculum q, then add a penalty
+            if not found_tm1_continuity and not found_tp1_continuity:
                 A_sum += 1
 
         return {
@@ -265,29 +275,41 @@ class Solution:
                    WHERE curriculum = ?'''
 
         for (q, ) in self._database.execute(q_sql, (course, )):
-            found_before_continuity = False
-            found_after_continuity = False
+            found_tm2_continuity = False
+            found_tm1_continuity = False
+            found_tp1_continuity = False
+            found_tp2_continuity = False
+
             for (c, ) in self._cursor.execute(c_sql, (q, )):
                 # We can assume that there do not exists another course with
                 # curriculum q at (day, period) since that would be invalid.
 
-                # Check if course exists before
+                if self._sum_room[c, day, period - 2] > 0:
+                    found_tm2_continuity = True
+
                 if self._sum_room[c, day, period - 1] > 0:
-                    found_before_continuity = True
-                    # If a penalty was added for period - 1, then add penalty
-                    if self._sum_room[c, day, period - 2] == 0: A_sum += 1
+                    found_tm1_continuity = True
 
-                # Check if course exists after, A_sum -= 1 (maybe)
                 if self._sum_room[c, day, period + 1] > 0:
-                    found_after_continuity = True
-                    # If a penalty was added for period + 1, then add penalty
-                    if self._sum_room[c, day, period + 2] == 0: A_sum += 1
+                    found_tp1_continuity = True
 
-                # Only one course is required for continuity
-                if found_before_continuity and found_after_continuity: break
+                if self._sum_room[c, day, period + 2] > 0:
+                    found_tp2_continuity = True
 
-            # If no continuity was cound for curriculum q, then remove penalty
-            if not found_before_continuity and not found_after_continuity:
+            # Check if course exists before.
+            # If a penalty was added for period - 1, then remove that
+            # penalty
+            if found_tm1_continuity and not found_tm2_continuity:
+                A_sum += 1
+
+            # Check if course exists after.
+            # If a penalty was added for period + 1, then remove that
+            # penalty
+            if found_tp1_continuity and not found_tp2_continuity:
+                A_sum += 1
+
+            # If no continuity was found for curriculum q, then add a penalty
+            if not found_tm1_continuity and not found_tp1_continuity:
                 A_sum -= 1
 
         return {
