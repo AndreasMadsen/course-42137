@@ -30,9 +30,9 @@ class MutateAbstraction:
     def execute_mutateor(self, solution):
         index = bisect.bisect(self._calculate_cdf(), random.random())
         getattr(self, self._methods[index])(solution, **self._settings)
-        return index
+        return self._methods[index]
 
-    def update_properbilities(self, index,
+    def update_properbilities(self, method,
                               global_better=False, current_better=False,
                               accept=False, reject=False):
         psi = 0
@@ -41,5 +41,14 @@ class MutateAbstraction:
         if accept and psi < self._w_accept: psi = self._w_accept
         if reject and psi < self._w_reject: psi = self._w_reject
 
+        index = self._methods.index(method)
         self._rho[index] = self._update_lambda * self._rho[index] \
             + (1 - self._update_lambda) * psi
+
+    def __str__(self):
+        rho_sum = sum(self._rho)
+        stats = '\n'.join(
+            '  %s: %.3f' % (method, self._rho[i] / rho_sum)
+            for i, method in enumerate(self._methods)
+        )
+        return type(self).__name__ + ' stats:\n' + stats

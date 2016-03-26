@@ -29,21 +29,23 @@ class ALNS:
 
             # Destroy solution
             old_objective = self._current.objective
-            index = self._destroy.execute_mutateor(self._current)
+            method = self._destroy.execute_mutateor(self._current)
             self._destroy.update_properbilities(
-                index,
+                method,
                 global_better=(self._current.objective < self.solution.objective),
                 current_better=(self._current.objective < old_objective)
             )
+            self._print('- used destroy method %s' % method)
 
             # Repair solution
             old_objective = self._current.objective
-            index = self._repair.execute_mutateor(self._current)
+            method = self._repair.execute_mutateor(self._current)
             self._repair.update_properbilities(
-                index,
+                method,
                 global_better=(self._current.objective < self.solution.objective),
                 current_better=(self._current.objective < old_objective)
             )
+            self._print('- used repair method %s' % method)
 
             # Update global solution
             if self._current.objective < self.solution.objective:
@@ -59,3 +61,5 @@ class ALNS:
                 self._print('- new objective value %d' % self.solution.objective)
 
         self._print('done! objective value: %d' % self.solution.objective)
+        self._print(self._destroy)
+        self._print(self._repair)

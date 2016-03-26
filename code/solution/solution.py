@@ -450,14 +450,16 @@ class Solution:
         # Update penalties and objective
         self.penalties += penalties
 
-    def missing_courses(self):
+    def missing_courses(self, count_missing=False):
         cursor = self._database.cursor()
         courses = []
         sql = '''SELECT course, number_of_lectures
                     FROM courses'''
         for course, num_lectures in cursor.execute(sql):
-            if num_lectures - self._sum_time_room[course] > 0:
-                courses.append(course)
+            missing = num_lectures - self._sum_time_room[course]
+            if missing > 0:
+                if (count_missing): courses.append((course, missing))
+                else: courses.append(course)
 
         return courses
 
