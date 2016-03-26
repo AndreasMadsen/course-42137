@@ -14,8 +14,8 @@ class ALNS:
         self.solution = initial.copy()
         self._current = initial.copy()
 
-        self._repair = Repair(**kwargs)
-        self._destroy = Destroy(**kwargs)
+        self._repair = Repair(database, **kwargs)
+        self._destroy = Destroy(database, **kwargs)
 
     def _print(self, *msg):
         if (self._verbose): print(*msg)
@@ -50,7 +50,7 @@ class ALNS:
             self.iterations += 1
 
             if (self._verbose):
-                self._print('iteration %d took %d sec' % (self.iterations, time.clock() - tick))
+                self._print('iteration %d took %.2f sec' % (self.iterations, time.clock() - tick))
 
             if solution_updated:
                 self._print('- new objective value %d' % self.solution.objective)

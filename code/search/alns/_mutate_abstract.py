@@ -3,7 +3,7 @@ import random
 import bisect
 
 class MutateAbstraction:
-    def __init__(self, methods, update_lambda=0.9,
+    def __init__(self, database, methods, update_lambda=0.9,
                  w_global=10, w_current=5, w_accept=1, w_reject=0,
                  **kwargs):
 
@@ -15,6 +15,7 @@ class MutateAbstraction:
 
         self._rho = [1] * len(methods)
         self._methods = methods
+        self._database = database
 
         self._settings = kwargs
 

@@ -4,13 +4,13 @@ import heapq
 from search.alns._mutate_abstract import MutateAbstraction
 
 class Repair(MutateAbstraction):
-    def __init__(self, **kwargs):
+    def __init__(self, database, **kwargs):
         methods = [
             'very_greedy',
             'best_placement'
         ]
 
-        super().__init__(methods, **kwargs)
+        super().__init__(database, methods, **kwargs)
 
     def very_greedy(self, solution, **kwargs):
         # Insert missing courses
