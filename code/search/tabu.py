@@ -1,7 +1,7 @@
 
 import time
 
-class Tabu:
+class TABU:
     def __init__(self, database, initial, verbose=False):
         self._database = database
         self._verbose = verbose

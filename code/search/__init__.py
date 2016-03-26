@@ -1,2 +1,2 @@
 
-from search.tabu import Tabu
+from search.tabu import TABU

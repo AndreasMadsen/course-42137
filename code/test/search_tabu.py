@@ -7,7 +7,7 @@ import solution
 import search
 
 database = dataset.Database.from_id(1)
-tabu = search.Tabu(database, solution.Solution(database, []))
+tabu = search.TABU(database, solution.Solution(database, []))
 
 def test_one_iteration():
     tabu.search(0.00001)
