@@ -51,10 +51,7 @@ class TABU:
             for combination_a in self.solution.existing_combinations():
                 for combination_b in self.solution.existing_combinations():
                     # swap(A, B) is equal to swap(B, A) so test only one version
-                    if combination_a[0] == combination_b[0] or \
-                       combination_a[1] >= combination_b[1] or \
-                       combination_a[2] >= combination_b[2] or \
-                       combination_a[3] >= combination_b[3]:
+                    if combination_a < combination_b:
                         continue
 
                     # Check for tabu
@@ -126,7 +123,11 @@ class TABU:
             self.iterations += 1
 
             if (self._verbose):
-                self._print("iteration %d took %d sec" % (self.iterations, time.clock() - tick))
+                self._print("iteration %d took %.2f sec" % (self.iterations, time.clock() - tick))
 
-            if (solution_updated is False):
+            if solution_updated:
+                self._print('- new objective value %d' % self.solution.objective)
+            else:
                 return
+
+        self._print('done! objective value: %d' % self.solution.objective)
