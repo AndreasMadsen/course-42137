@@ -45,7 +45,6 @@ class Solution:
     def _intialize_cost(self):
         # The only cost associated with an empty solution is unscheduled cost
         # and the minimum working days cost.
-
         U_sum = 0
         W_sum = 0
         sql = '''SELECT number_of_lectures, minimum_working_days
@@ -464,6 +463,13 @@ class Solution:
 
     def existing_combinations(self):
         return [combination.all for combination in self.schedule]
+
+    def avaliable_slots(self):
+        for d in range(0, self._database.days):
+            for p in range(0, self._database.periods_per_day):
+                for r in range(0, self._database.rooms):
+                    slot = (d, p, r)
+                    if slot not in self._sum_course: yield slot
 
     def __str__(self):
         header = textwrap.dedent("""\

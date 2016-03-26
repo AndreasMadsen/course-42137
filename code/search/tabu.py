@@ -17,12 +17,6 @@ class Tabu:
     def _print(self, *msg):
         if (self._verbose): print(*msg)
 
-    def _day_period_room(self, day=-1, period=-1, room=-1):
-        for d in range(day + 1, self._database.days):
-            for p in range(period + 1, self._database.periods_per_day):
-                for r in range(room + 1, self._database.rooms):
-                    yield (d, p, r)
-
     def search(self, max_duration):
         max_time = time.clock() + max_duration
         solution_updated = False
@@ -33,7 +27,7 @@ class Tabu:
 
             # Insert missing courses
             for course in self.solution.missing_courses():
-                for time_room in self._day_period_room():
+                for time_room in self.solution.avaliable_slots():
                     combination = (course, ) + time_room
                     # Check for tabu
                     if combination in self._insert_tabu:
@@ -85,7 +79,7 @@ class Tabu:
 
             # Move combination
             for combination in self.solution.existing_combinations():
-                for destination in self._day_period_room():
+                for destination in self.solution.avaliable_slots():
                     # Check for tabu
                     if combination[1:] + destination in self._move_tabu:
                         continue
