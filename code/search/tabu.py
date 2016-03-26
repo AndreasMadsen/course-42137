@@ -12,14 +12,13 @@ class TABU:
         self._remove_tabu = set()
 
         self.iterations = 0
-        self.solution = initial
+        self.solution = initial.copy()
 
     def _print(self, *msg):
         if (self._verbose): print(*msg)
 
     def search(self, max_duration):
         max_time = time.clock() + max_duration
-        solution_updated = False
 
         while(time.clock() < max_time):
             if (self._verbose): tick = time.clock()
