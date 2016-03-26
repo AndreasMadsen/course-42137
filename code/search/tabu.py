@@ -25,7 +25,7 @@ class TABU:
             solution_updated = False
 
             # Insert missing courses
-            for course in self.solution.missing_courses():
+            for (course, missing) in self.solution.missing_courses():
                 for time_room in self.solution.avaliable_slots():
                     combination = (course, ) + time_room
                     # Check for tabu
@@ -42,6 +42,10 @@ class TABU:
                             self._insert_tabu.add(combination)
                             self.solution.mutate_add(*combination, penalties=penalties)
                             solution_updated = True
+
+                            # Stop if all missing courses are inserted
+                            missing -= 1
+                            if missing == 0: break
 
             # Swap combinations
             for combination_a in self.solution.existing_combinations():

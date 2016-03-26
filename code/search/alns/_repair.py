@@ -14,9 +14,7 @@ class Repair(MutateAbstraction):
 
     def very_greedy(self, solution, **kwargs):
         # Insert missing courses
-        for (course, missing) in solution.missing_courses(count_missing=True):
-            inserted = 0
-
+        for (course, missing) in solution.missing_courses():
             for time_room in solution.avaliable_slots():
                 combination = (course, ) + time_room
 
@@ -29,8 +27,8 @@ class Repair(MutateAbstraction):
                         solution.mutate_add(*combination, penalties=penalties)
 
                         # Stop if all missing courses are inserted
-                        inserted += 1
-                        if ++inserted >= missing: break
+                        missing -= 1
+                        if missing == 0: break
 
     def best_placement(self, solution, **kwargs):
 
@@ -48,7 +46,7 @@ class Repair(MutateAbstraction):
                     if (cost < 0): yield (combination, cost)
 
         # Insert missing courses
-        for (course, missing) in solution.missing_courses(count_missing=True):
+        for (course, missing) in solution.missing_courses():
             # Get best combinations
             best = heapq.nsmallest(
                 missing, evaluate_improvement(course),
