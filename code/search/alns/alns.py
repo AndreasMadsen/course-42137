@@ -25,29 +25,24 @@ class ALNS:
 
         while(time.clock() < max_time):
             if (self._verbose): tick = time.clock()
-            solution_updated = False
-
-            # Destroy solution
             old_objective = self._current.objective
-            method = self._destroy.execute_mutateor(self._current)
-            self._destroy.update_properbilities(
-                method,
-                global_better=(self._current.objective < self.solution.objective),
-                current_better=(self._current.objective < old_objective)
-            )
-            self._print('- used destroy method %s' % method)
 
-            # Repair solution
-            old_objective = self._current.objective
-            method = self._repair.execute_mutateor(self._current)
-            self._repair.update_properbilities(
-                method,
-                global_better=(self._current.objective < self.solution.objective),
-                current_better=(self._current.objective < old_objective)
-            )
-            self._print('- used repair method %s' % method)
+            # Destroy and repair solution
+            destroy_method = self._destroy.execute_mutateor(self._current)
+            repair_method = self._repair.execute_mutateor(self._current)
+            self._print('- used destroy method %s' % destroy_method)
+            self._print('- used repair method %s' % repair_method)
+
+            # Update properbilities
+            is_better = {
+                'global_better': self._current.objective < self.solution.objective,
+                'current_better': self._current.objective < old_objective
+            }
+            self._destroy.update_properbilities(destroy_method, **is_better)
+            self._repair.update_properbilities(repair_method, **is_better)
 
             # Update global solution
+            solution_updated = False
             if self._current.objective < self.solution.objective:
                 self.solution = self._current.copy()
                 solution_updated = True
