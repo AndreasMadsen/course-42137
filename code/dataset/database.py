@@ -1,7 +1,7 @@
 import sys
 import os.path as path
 
-import sqlite3
+import collections
 
 thisdir = path.dirname(path.realpath(__file__))
 datasetdir = path.join(thisdir, 'TestDataUTT')
@@ -12,34 +12,35 @@ class Database:
                  directory=None):
 
         self.directory = directory
-        self._database = sqlite3.connect(':memory:')
-        self._setup_tables()
 
         # Load basic.utt attributes
         with open(basic, 'r') as f:
             data = f.readlines()[1].split()
+            Meta = collections.namedtuple('Meta', [
+                'courses', 'rooms', 'days',
+                'periods_per_day', 'curricula',
+                'constraints', 'lecturers'
+            ])
 
-            self.courses = int(data[0])
-            self.rooms = int(data[1])
-            self.days = int(data[2])
-            self.periods_per_day = int(data[3])
-            self.curricula = int(data[4])
-            self.constraints = int(data[5])
-            self.lecturers = int(data[6])
+            self.meta = Meta(
+                courses=int(data[0]),
+                rooms=int(data[1]),
+                days=int(data[2]),
+                periods_per_day=int(data[3]),
+                curricula=int(data[4]),
+                constraints=int(data[5]),
+                lecturers=int(data[6])
+            )
 
         # Load database content
-        self._load_courses(courses)
-        self._load_curricula(curricula)
-        self._load_lecturers(lecturers)
-        self._load_relation(relation)
-        self._load_rooms(rooms)
-        self._load_unavailability(unavailability)
+        self.courses = self._load_courses(courses)
+        self.curricula = self._load_relation(relation)
+        self.rooms = self._load_rooms(rooms)
+        self.unavailability = self._load_unavailability(unavailability)
 
-        # Commit data
-        self.commit()
-
-    def __getattr__(self, attr):
-        return getattr(self._database, attr)
+        # Bind data to course objects
+        self._bind_curricula()
+        self._bind_conflicts()
 
     @classmethod
     def from_id(clc, id):
@@ -55,102 +56,80 @@ class Database:
             directory=database_files
         )
 
-    def _setup_tables(self):
-        self.executescript('''
-            CREATE TABLE lecturers (
-                lecturer INTEGER PRIMARY KEY NOT NULL
-            );
-
-            CREATE TABLE courses (
-                course               INTEGER PRIMARY KEY NOT NULL,
-                lecturer             INTEGER NOT NULL,
-                number_of_lectures   INTEGER NOT NULL,
-                minimum_working_days INTEGER NOT NULL,
-                number_of_student    INTEGER NOT NULL,
-                FOREIGN KEY (lecturer) REFERENCES lecturers(lecturer)
-            );
-
-            CREATE TABLE curricula (
-                curriculum        INTEGER PRIMARY KEY NOT NULL,
-                number_of_courses INTEGER NOT NULL
-            );
-
-            CREATE TABLE relation (
-                curriculum INTEGER NOT NULL,
-                course     INTEGER NOT NULL,
-                PRIMARY KEY (curriculum, course),
-                FOREIGN KEY (curriculum) REFERENCES curricula(curriculum),
-                FOREIGN KEY (course) REFERENCES courses(course)
-            );
-
-            CREATE TABLE rooms (
-                room     INTEGER PRIMARY KEY NOT NULL,
-                capacity INTEGER NOT NULL
-            );
-
-            CREATE TABLE unavailability (
-                course INTEGER NOT NULL,
-                day    INTEGER NOT NULL,
-                period INTEGER NOT NULL,
-                PRIMARY KEY (course, day, period),
-                FOREIGN KEY (course) REFERENCES courses(course)
-            );
-        ''')
-
     def _load_courses(self, filepath):
-        with open(filepath, 'r') as f:
-            self.executemany(
-                'INSERT INTO courses VALUES (?, ?, ?, ?, ?)',
-                ((a[1:], b[1:], c, d, e) for (a, b, c, d, e) in _parse_file(f))
-            )
+        Course = collections.namedtuple('Course', [
+            'course', 'lecturer', 'number_of_lectures',
+            'minimum_working_days', 'number_of_student',
+            'curricula', 'conflicts'
+        ])
 
-    def _load_lecturers(self, filepath):
         with open(filepath, 'r') as f:
-            self.executemany(
-                'INSERT INTO lecturers VALUES (?)',
-                ((a[1:], ) for (a, ) in _parse_file(f))
-            )
+            return {
+                a: Course(a, b, c, d, e, [], []) for (a, b, c, d, e) in _parse_file(f)
+            }
 
     def _load_rooms(self, filepath):
-        with open(filepath, 'r') as f:
-            self.executemany(
-                'INSERT INTO rooms VALUES (?, ?)',
-                ((a[1:], b) for (a, b) in _parse_file(f))
-            )
+        Room = collections.namedtuple('Room', [
+            'room', 'capacity'
+        ])
 
-    def _load_curricula(self, filepath):
         with open(filepath, 'r') as f:
-            self.executemany(
-                'INSERT INTO curricula VALUES (?, ?)',
-                ((a[1:], b) for (a, b) in _parse_file(f))
-            )
+            return {
+                a: Room(a, b) for (a, b) in _parse_file(f)
+            }
 
     def _load_relation(self, filepath):
+        Curriculum = collections.namedtuple('Curriculum', [
+            'curriculum', 'courses'
+        ])
+
+        table = dict()
         with open(filepath, 'r') as f:
-            self.executemany(
-                'INSERT INTO relation VALUES (?, ?)',
-                ((a[1:], b[1:]) for (a, b) in _parse_file(f))
-            )
+            for (curriculum, course) in _parse_file(f):
+                if curriculum in table:
+                    table[curriculum].courses.append(course)
+                else:
+                    table[curriculum] = Curriculum(curriculum, [course])
+        return table
 
     def _load_unavailability(self, filepath):
-        with open(filepath, 'r') as f:
-            self.executemany(
-                'INSERT INTO unavailability VALUES (?, ?, ?)',
-                ((a[1:], b, c) for (a, b, c) in _parse_file(f))
-            )
+        Unavailability = collections.namedtuple('Unavailability', [
+            'course', 'day', 'period'
+        ])
 
-    def close(self):
-        self.executescript('''
-            DROP TABLE courses;
-            DROP TABLE curricula;
-            DROP TABLE lecturers;
-            DROP TABLE relation;
-            DROP TABLE rooms;
-            DROP TABLE unavailability;
-        ''')
-        self._database.close()
+        with open(filepath, 'r') as f:
+            return {
+                Unavailability(a, b, c) for (a, b, c) in _parse_file(f)
+            }
+
+    def _bind_curricula(self):
+        for (curriculum, courses) in self.curricula.values():
+            for course in courses:
+                self.courses[course].curricula.append(curriculum)
+
+    def _bind_conflicts(self):
+        for course in self.courses.values():
+            curricula = set(course.curricula)
+            for other in self.courses.values():
+                # Don't be conflict with itself
+                if other.course == course.course:
+                    continue
+
+                # same lecturer
+                if other.lecturer == course.lecturer:
+                    course.conflicts.append(other.course)
+                    continue
+
+                # shared curriculum
+                for other_curricula in other.curricula:
+                    if other_curricula in curricula:
+                        course.conflicts.append(other.course)
+                        break
 
 def _parse_file(f):
     next(f)  # skip header
-    data = (line.split() for line in f)  # split lines
+    data = (
+        [(int(token[1:]) if token[0].isalpha() else int(token)) for token in line.split()]
+        for line in f
+    )  # split lines
     return data

@@ -25,12 +25,8 @@ class Destroy(MutateAbstraction):
 
     def curriculum(self, solution, remove=5, **kwargs):
         # Get random curricula and associated courses
-        curricula = random.randint(0, self._database.curricula - 1)
-        courses = set(
-            c for (c, ) in self._database.execute(
-                'SELECT course FROM relation WHERE curriculum = ?', (curricula, )
-            )
-        )
+        curricula = random.randint(0, self._database.meta.curricula - 1)
+        courses = set(self._database.curricula[curricula].courses)
 
         # Select combinations related to this curricula
         combinations = [
@@ -44,7 +40,7 @@ class Destroy(MutateAbstraction):
 
     def day(self, solution, remove=5, **kwargs):
         # Get random day
-        day = random.randint(0, self._database.days - 1)
+        day = random.randint(0, self._database.meta.days - 1)
 
         # Select combinations related to this curricula
         combinations = [
@@ -58,7 +54,7 @@ class Destroy(MutateAbstraction):
 
     def course(self, solution, remove=5, **kwargs):
         # Get random day
-        course = random.randint(0, self._database.courses - 1)
+        course = random.randint(0, self._database.meta.courses - 1)
 
         # Select combinations related to this curricula
         combinations = [

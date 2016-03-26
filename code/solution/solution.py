@@ -19,7 +19,6 @@ class Solution:
         self.penalties = Penalties()
 
         self._database = database
-        self._cursor = database.cursor()
 
         self._dict_time = collections.defaultdict(list)
         self._dict_course = collections.defaultdict(list)
@@ -47,13 +46,11 @@ class Solution:
         # and the minimum working days cost.
         U_sum = 0
         W_sum = 0
-        sql = '''SELECT number_of_lectures, minimum_working_days
-                 FROM courses'''
-        for (num_lectures, minimum_working_days) in self._cursor.execute(sql):
+        for course in self._database.courses.values():
             # There are not scheduled any courses
-            U_sum += num_lectures
+            U_sum += course.number_of_lectures
             # All courses have zero working days
-            W_sum += minimum_working_days
+            W_sum += course.minimum_working_days
 
         self.penalties.U_sum += U_sum
         self.penalties.W_sum += W_sum
@@ -69,9 +66,7 @@ class Solution:
         # This course is already registred at this time
         if self._sum_room[course, day, period] > 0: return False
         # This course can not be assigned to this time slot
-        sql = '''SELECT count(*) FROM unavailability
-                 WHERE course = ? AND day = ? AND period = ?'''
-        F_ct = self._cursor.execute(sql, (course, day, period)).fetchone()[0]
+        F_ct = (course, day, period) in self._database.unavailability
         if F_ct == 1: return False
 
         # 1c
@@ -80,24 +75,12 @@ class Solution:
 
         # 1d
         # the maximum number of lecturers is not exceeded
-        sql = '''SELECT number_of_lectures FROM courses
-                 WHERE course = ?'''
-        L_c = self._cursor.execute(sql, (course, )).fetchone()[0]
+        L_c = self._database.courses[course].number_of_lectures
         if self._sum_time_room[course] >= L_c: return False
 
         # 1e
         # There are no conflicting courses scheduled at this time
-        sql = '''SELECT DISTINCT c2.course as c2
-                 FROM courses AS c1
-                 LEFT JOIN relation AS r1 ON c1.course = r1.course
-                 INNER JOIN (
-                     SELECT ct.course, ct.lecturer, rt.curriculum from courses AS ct
-                     LEFT JOIN relation AS rt ON ct.course = rt.course
-                 ) AS c2
-                   ON c1.course != c2.course
-                   AND (c1.lecturer = c2.lecturer OR r1.curriculum = c2.curriculum)
-                 WHERE c1.course = ?'''
-        for (conflicting_course, ) in self._cursor.execute(sql, (course, )):
+        for conflicting_course in self._database.courses[course].conflicts:
             for existing_combination in self._dict_time[day, period]:
                 if conflicting_course == existing_combination.course:
                     return False
@@ -106,11 +89,9 @@ class Solution:
 
     def _add_delta(self, course, day, period, room):
         # V: exceeded room capacity
-        sql = '''SELECT courses.number_of_student - rooms.capacity
-                 FROM courses
-                 INNER JOIN rooms ON rooms.room = ?
-                 WHERE course = ?'''
-        V_sum = max(0, self._cursor.execute(sql, (room, course)).fetchone()[0])
+        number_of_student = self._database.courses[course].number_of_student
+        room_capacity = self._database.rooms[room].capacity
+        V_sum = max(0, number_of_student - room_capacity)
 
         # U: scheduled to few times
         # This assumes the additon is valid, thus we already know there is
@@ -123,30 +104,20 @@ class Solution:
         if (room not in used_rooms and len(used_rooms) > 0): P_sum = 1
 
         # W: to few working days
-        sql = '''SELECT minimum_working_days
-                 FROM courses
-                 WHERE course = ?'''
         day_spread = {c.day for c in self._dict_course[course]}
-        min_spread = self._cursor.execute(sql, (course, )).fetchone()[0]
+        min_spread = self._database.courses[course].minimum_working_days
         W_sum = 0
         if (len(day_spread) < min_spread and day not in day_spread): W_sum = -1
 
         # A: curriculum continuity
         A_sum = 0
-        q_sql = '''SELECT curriculum
-                   FROM relation
-                   WHERE course = ?'''
-        c_sql = '''SELECT course
-                   FROM relation
-                   WHERE curriculum = ?'''
-
-        for (q, ) in self._database.execute(q_sql, (course, )):
+        for q in self._database.courses[course].curricula:
             found_tm2_continuity = False
             found_tm1_continuity = False
             found_tp1_continuity = False
             found_tp2_continuity = False
 
-            for (c, ) in self._cursor.execute(c_sql, (q, )):
+            for c in self._database.curricula[q].courses:
                 # We can assume that there do not exists another course with
                 # curriculum q at (day, period) since that would be invalid.
 
@@ -226,11 +197,9 @@ class Solution:
 
     def _remove_delta(self, course, day, period, room):
         # V: exceeded room capacity
-        sql = '''SELECT courses.number_of_student - rooms.capacity
-                 FROM courses
-                 INNER JOIN rooms ON rooms.room = ?
-                 WHERE course = ?'''
-        V_sum = -max(0, self._cursor.execute(sql, (room, course)).fetchone()[0])
+        number_of_student = self._database.courses[course].number_of_student
+        room_capacity = self._database.rooms[room].capacity
+        V_sum = -max(0, number_of_student - room_capacity)
 
         # U: scheduled to few times
         U_sum = 1
@@ -242,32 +211,22 @@ class Solution:
         if (len(all_rooms) > 1 and len(used_rooms) == 1): P_sum = -1
 
         # W: to few working days
-        sql = '''SELECT minimum_working_days
-                 FROM courses
-                 WHERE course = ?'''
         day_spread = {c.day for c in self._dict_course[course]}
         used_days = [c.day for c in self._dict_course[course] if c.day == day]
-        min_spread = self._cursor.execute(sql, (course, )).fetchone()[0]
+        min_spread = self._database.courses[course].minimum_working_days
         W_sum = 0
         if (len(day_spread) <= min_spread and len(used_days) == 1):
             W_sum = 1
 
         # A: curriculum continuity
         A_sum = 0
-        q_sql = '''SELECT curriculum
-                   FROM relation
-                   WHERE course = ?'''
-        c_sql = '''SELECT course
-                   FROM relation
-                   WHERE curriculum = ?'''
-
-        for (q, ) in self._database.execute(q_sql, (course, )):
+        for q in self._database.courses[course].curricula:
             found_tm2_continuity = False
             found_tm1_continuity = False
             found_tp1_continuity = False
             found_tp2_continuity = False
 
-            for (c, ) in self._cursor.execute(c_sql, (q, )):
+            for c in self._database.curricula[q].courses:
                 # We can assume that there do not exists another course with
                 # curriculum q at (day, period) since that would be invalid.
 
@@ -451,13 +410,10 @@ class Solution:
         self.penalties += penalties
 
     def missing_courses(self):
-        cursor = self._database.cursor()
         courses = []
-        sql = '''SELECT course, number_of_lectures
-                    FROM courses'''
-        for course, num_lectures in cursor.execute(sql):
-            missing = num_lectures - self._sum_time_room[course]
-            if missing > 0: courses.append((course, missing))
+        for course in self._database.courses.values():
+            missing = course.number_of_lectures - self._sum_time_room[course.course]
+            if missing > 0: courses.append((course.course, missing))
 
         return courses
 
@@ -465,9 +421,9 @@ class Solution:
         return [combination.all for combination in self.schedule]
 
     def avaliable_slots(self):
-        for d in range(0, self._database.days):
-            for p in range(0, self._database.periods_per_day):
-                for r in range(0, self._database.rooms):
+        for d in range(0, self._database.meta.days):
+            for p in range(0, self._database.meta.periods_per_day):
+                for r in range(0, self._database.meta.rooms):
                     slot = (d, p, r)
                     if slot not in self._sum_course: yield slot
 
