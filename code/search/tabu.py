@@ -1,7 +1,7 @@
 
 import time
 
-class Tabu:
+class TABU:
     def __init__(self, database, initial, verbose=False):
         self._database = database
         self._verbose = verbose
@@ -12,28 +12,21 @@ class Tabu:
         self._remove_tabu = set()
 
         self.iterations = 0
-        self.solution = initial
+        self.solution = initial.copy()
 
     def _print(self, *msg):
         if (self._verbose): print(*msg)
 
-    def _day_period_room(self, day=-1, period=-1, room=-1):
-        for d in range(day + 1, self._database.days):
-            for p in range(period + 1, self._database.periods_per_day):
-                for r in range(room + 1, self._database.rooms):
-                    yield (d, p, r)
-
     def search(self, max_duration):
         max_time = time.clock() + max_duration
-        solution_updated = False
 
         while(time.clock() < max_time):
             if (self._verbose): tick = time.clock()
             solution_updated = False
 
             # Insert missing courses
-            for course in self.solution.missing_courses():
-                for time_room in self._day_period_room():
+            for (course, missing) in self.solution.missing_courses():
+                for time_room in self.solution.avaliable_slots():
                     combination = (course, ) + time_room
                     # Check for tabu
                     if combination in self._insert_tabu:
@@ -49,6 +42,10 @@ class Tabu:
                             self._insert_tabu.add(combination)
                             self.solution.mutate_add(*combination, penalties=penalties)
                             solution_updated = True
+
+                            # Stop if all missing courses are inserted
+                            missing -= 1
+                            if missing == 0: break
 
             # Swap combinations
             for combination_a in self.solution.existing_combinations():
@@ -85,7 +82,7 @@ class Tabu:
 
             # Move combination
             for combination in self.solution.existing_combinations():
-                for destination in self._day_period_room():
+                for destination in self.solution.avaliable_slots():
                     # Check for tabu
                     if combination[1:] + destination in self._move_tabu:
                         continue
