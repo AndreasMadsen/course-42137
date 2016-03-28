@@ -15,7 +15,7 @@ tempdir = path.join(thisdir, 'temp')
 solutionfile = path.join(tempdir, 'solution.sol')
 penaltiesfile = path.join(tempdir, 'penalties.log')
 
-extract_values = '^[A-Z]+\s*\|\s*([0-9]+)\s\|\s*([0-9]+)\s\|\s*([0-9]+)$'
+extract_values = '^[A-Z]+\s*\|\s*((?:-|)[0-9]+)\s\|\s*((?:-|)[0-9]+)\s\|\s*((?:-|)[0-9]+)$'
 
 class Validator:
     def __init__(self, database, solution):
