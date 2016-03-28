@@ -21,3 +21,7 @@ class TabuList:
         self._set.add(item)
         if (self._max_size is not None):
             self._queue.append(item)
+
+    def clear(self):
+        self._queue.clear()
+        self._set.clear()

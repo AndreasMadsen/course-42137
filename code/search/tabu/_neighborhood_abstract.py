@@ -9,6 +9,9 @@ class NeighborhoodAbstract:
         self._tabu = TabuList(max_size=tabu_limit)
         self._MoveObject = collections.namedtuple(name, ['move', 'penalties', 'objective'])
 
+    def clear_tabu(self):
+        self._tabu.clear()
+
     def is_tabu(self, move):
         return move in self._tabu
 
