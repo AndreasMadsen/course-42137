@@ -7,7 +7,7 @@ from search.tabu._neighborhood_swap import NeighborhoodSwap
 from search.tabu._neighborhood_move import NeighborhoodMove
 
 class TABU:
-    def __init__(self, database, initial, verbose=False):
+    def __init__(self, database, initial, allow_swap=False, verbose=False):
         self._database = database
         self._verbose = verbose
 
@@ -15,6 +15,8 @@ class TABU:
         self._remove = NeighborhoodRemove(database)
         self._swap = NeighborhoodSwap(database)
         self._move = NeighborhoodMove(database)
+
+        self._allow_swap = allow_swap
 
         self.iterations = 0
         self.solution = initial.copy()
@@ -28,12 +30,21 @@ class TABU:
         while(time.clock() < max_time):
             if (self._verbose): tick = time.clock()
 
-            moves = [
-                self._add.scan_neighborhood(self.solution),
-                self._swap.scan_neighborhood(self.solution),
-                self._move.scan_neighborhood(self.solution),
-                self._remove.scan_neighborhood(self.solution)
-            ]
+            # Swap can as such be done by performing 3 moves. Futhermore
+            # it is quite expensive to search the neighborhood.
+            if allow_swap:
+                moves = [
+                    self._add.scan_neighborhood(self.solution),
+                    self._swap.scan_neighborhood(self.solution),
+                    self._move.scan_neighborhood(self.solution),
+                    self._remove.scan_neighborhood(self.solution)
+                ]
+            else:
+                moves = [
+                    self._add.scan_neighborhood(self.solution),
+                    self._move.scan_neighborhood(self.solution),
+                    self._remove.scan_neighborhood(self.solution)
+                ]
 
             best_move = min(*moves, key=lambda move: move.objective)
 
@@ -41,7 +52,7 @@ class TABU:
                 if self._add.move_belongs(best_move):
                     self._add.apply(self.solution, best_move)
 
-                elif self._swap.move_belongs(best_move):
+                elif self._allow_swap and self._swap.move_belongs(best_move):
                     self._swap.apply(self.solution, best_move)
 
                 elif self._move.move_belongs(best_move):
@@ -56,7 +67,8 @@ class TABU:
                 self._print("iteration %d took %.2f sec" % (self.iterations, time.clock() - tick))
 
             if best_move.objective < 0:
-                self._print('- new objective value %d' % self.solution.objective)
+                self._print('- new objective value: %d' % self.solution.objective)
+                self._print('- used: %s' % type(best_move).__name__.lower())
             else:
                 break
 
