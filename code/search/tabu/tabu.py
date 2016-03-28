@@ -6,13 +6,15 @@ from search.tabu._neighborhood_swap import NeighborhoodSwap
 from search.tabu._neighborhood_move import NeighborhoodMove
 
 class TABU:
-    def __init__(self, database, initial, allow_swap=True, verbose=False):
+    def __init__(self, database, initial,
+                 allow_swap=True, tabu_limit=None,
+                 verbose=False):
         self._database = database
         self._verbose = verbose
 
-        self._add_remove = NeighborhoodAddRemove(database)
-        self._swap = NeighborhoodSwap(database)
-        self._move = NeighborhoodMove(database)
+        self._add_remove = NeighborhoodAddRemove(database, tabu_limit=tabu_limit)
+        self._swap = NeighborhoodSwap(database, tabu_limit=tabu_limit)
+        self._move = NeighborhoodMove(database, tabu_limit=tabu_limit)
 
         self._allow_swap = allow_swap
 

@@ -1,10 +1,12 @@
 
 import collections
 
+from search.tabu._tabu_list import TabuList
+
 class NeighborhoodAbstract:
     def __init__(self, database, name, tabu_limit=None):
         self._database = database
-        self._tabu = set()
+        self._tabu = TabuList(max_size=tabu_limit)
         self._MoveObject = collections.namedtuple(name, ['move', 'penalties', 'objective'])
 
     def is_tabu(self, move):
