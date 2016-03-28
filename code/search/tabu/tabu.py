@@ -1,18 +1,16 @@
 
 import time
 
-from search.tabu._neighborhood_add import NeighborhoodAdd
-from search.tabu._neighborhood_remove import NeighborhoodRemove
+from search.tabu._neighborhood_add_remove import NeighborhoodAddRemove
 from search.tabu._neighborhood_swap import NeighborhoodSwap
 from search.tabu._neighborhood_move import NeighborhoodMove
 
 class TABU:
-    def __init__(self, database, initial, allow_swap=False, verbose=False):
+    def __init__(self, database, initial, allow_swap=True, verbose=False):
         self._database = database
         self._verbose = verbose
 
-        self._add = NeighborhoodAdd(database)
-        self._remove = NeighborhoodRemove(database)
+        self._add_remove = NeighborhoodAddRemove(database)
         self._swap = NeighborhoodSwap(database)
         self._move = NeighborhoodMove(database)
 
@@ -32,34 +30,26 @@ class TABU:
 
             # Swap can as such be done by performing 3 moves. Futhermore
             # it is quite expensive to search the neighborhood.
-            if allow_swap:
-                moves = [
-                    self._add.scan_neighborhood(self.solution),
-                    self._swap.scan_neighborhood(self.solution),
-                    self._move.scan_neighborhood(self.solution),
-                    self._remove.scan_neighborhood(self.solution)
-                ]
-            else:
-                moves = [
-                    self._add.scan_neighborhood(self.solution),
-                    self._move.scan_neighborhood(self.solution),
-                    self._remove.scan_neighborhood(self.solution)
-                ]
+            moves = [
+                self._add_remove.scan_neighborhood(self.solution),
+                self._move.scan_neighborhood(self.solution)
+            ]
+            if self._allow_swap:
+                moves.append(self._swap.scan_neighborhood(self.solution))
 
+            # Find the best move
             best_move = min(*moves, key=lambda move: move.objective)
 
+            # Apply the best move if it decreases the objective
             if best_move.objective < 0:
-                if self._add.move_belongs(best_move):
-                    self._add.apply(self.solution, best_move)
-
-                elif self._allow_swap and self._swap.move_belongs(best_move):
-                    self._swap.apply(self.solution, best_move)
+                if self._add_remove.move_belongs(best_move):
+                    self._add_remove.apply(self.solution, best_move)
 
                 elif self._move.move_belongs(best_move):
                     self._move.apply(self.solution, best_move)
 
-                elif self._remove.move_belongs(best_move):
-                    self._remove.apply(self.solution, best_move)
+                elif self._swap.move_belongs(best_move):
+                    self._swap.apply(self.solution, best_move)
 
             self.iterations += 1
 
