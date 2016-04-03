@@ -5,13 +5,53 @@ import random
 from search.tabu._neighborhood_add_remove import NeighborhoodAddRemove
 from search.tabu._neighborhood_swap import NeighborhoodSwap
 from search.tabu._neighborhood_move import NeighborhoodMove
+from search._search_abstract import SearchAbstract
 
-class TABU:
+class TABU(SearchAbstract):
     def __init__(self, database, initial,
-                 allow_swap=True, diversification=None, intensification=None,
-                 tabu_limit=None, verbose=False):
-        self._database = database
-        self._verbose = verbose
+                 diversification=None, intensification=None,
+                 tabu_limit=None, allow_swap=True,
+                 **kwargs):
+        """Standard implementation of TABU
+
+        Parameters
+        ----------
+        database: the database object (required)
+        initial: the initial solution, this will not be mutated (required)
+
+        verbose: if true, progress information will be printed to stdout
+                 (default: False)
+
+        diversification: If the current iteration did not improve the solution
+                         then diversify the solution by removing
+                         `diversification` amount of random (course, time, room)
+                         combinations from the schedule. If None diversification
+                         is disabed. (default: None)
+
+        intensification: If the globally best solution hasn't improved for
+                         `intensification` amount of iteration. Then reset the
+                         current solution to be currently globally best
+                         solution, and clear the tabu memory. If None
+                         intensification is disabed. (default: None)
+
+        tabu_limit: Limits the tabu memory to `tabu_limit` move. A new move
+                    will remove the oldest move from the tabu memory. Note that
+                    the memory of move, swap and add+remove are independent,
+                    this is to simplify the implementation. If None there is no
+                    memory limit. (default. None)
+
+        allow_swap: If true swap operations are included in the neighborhood.
+                    Otherwise only move and add+remove operations are included.
+                    (default: False)
+
+        Attributes
+        ----------
+        interations: the number of iterations performed
+        solution: the globally best solution
+        """
+        super().__init__(database, initial, **kwargs)
+
+        self._current = initial.copy()
 
         self._add_remove = NeighborhoodAddRemove(database, tabu_limit=tabu_limit)
         self._swap = NeighborhoodSwap(database, tabu_limit=tabu_limit)
@@ -21,13 +61,6 @@ class TABU:
         self._diversification = diversification
         self._intensification = intensification
         self._iters_without_improved_global = 0
-
-        self.iterations = 0
-        self.solution = initial.copy()
-        self._current = initial.copy()
-
-    def _print(self, *msg):
-        if (self._verbose): print(*msg)
 
     def _intensity(self):
         if self._intensification is None: return False
@@ -62,6 +95,9 @@ class TABU:
         return True
 
     def search(self, max_duration):
+        """search for a better solution, the time usage may not exceed
+        `max_duration` seconds.
+        """
         max_time = time.clock() + max_duration
 
         while(time.clock() < max_time):
