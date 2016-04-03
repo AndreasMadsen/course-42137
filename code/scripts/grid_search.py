@@ -34,7 +34,7 @@ tabu_parameters = collections.OrderedDict([
 ])
 
 grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60,
-                             verbose=True, dry_run=True)
+                             verbose=True)
 
 alns_results = grid.search(search.ALNS, alns_parameters)
 np.save(results_path('alns.npy'), alns_results, allow_pickle=False)

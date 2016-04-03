@@ -10,4 +10,4 @@ cd $PBS_O_WORKDIR
 export PYTHONPATH=
 source ~/stdpy3/bin/activate
 
-python grid-search.py
+python code/scripts/grid_search.py

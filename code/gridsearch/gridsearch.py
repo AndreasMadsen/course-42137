@@ -59,7 +59,7 @@ class GridSearch:
         return scores
 
 def _generate_settings_and_index(parameters, keys=None, settings=dict(), index=tuple()):
-    if keys is None: keys = list(reversed(parameters.keys()))
+    if keys is None: keys = list(reversed(list(parameters.keys())))
     else: keys = keys.copy()
 
     key = keys.pop()
