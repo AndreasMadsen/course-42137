@@ -20,8 +20,7 @@ def initalizer(database):
 
 def test_basic_properties():
 
-    grid = gridsearch.GridSearch([database], initalizer,
-                                 time=0.000001, verbose=True)
+    grid = gridsearch.GridSearch([database], initalizer, time=0.000001)
 
     parameters = collections.OrderedDict([
         ('update_lambda', [0.8, 0.9, 0.95, 0.99]),
