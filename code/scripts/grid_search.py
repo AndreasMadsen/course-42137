@@ -41,7 +41,7 @@ np.save(results_path('alns.npy'), alns_results, allow_pickle=False)
 with open(results_path('alns.plk'), 'wb') as f:
     pickle.dump(alns_parameters, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-tabu_results = grid.search(search.ALNS, tabu_parameters)
-np.save(results_path('tabu.npy'), alns_results, allow_pickle=False)
+tabu_results = grid.search(search.TABU, tabu_parameters)
+np.save(results_path('tabu.npy'), tabu_results, allow_pickle=False)
 with open(results_path('tabu.plk'), 'wb') as f:
     pickle.dump(tabu_parameters, f, protocol=pickle.HIGHEST_PROTOCOL)
