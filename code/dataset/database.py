@@ -6,6 +6,31 @@ import collections
 thisdir = path.dirname(path.realpath(__file__))
 datasetdir = path.join(thisdir, 'TestDataUTT')
 
+# Define container objects using namedtuple
+Meta = collections.namedtuple('Meta', [
+    'courses', 'rooms', 'days',
+    'periods_per_day', 'curricula',
+    'constraints', 'lecturers'
+])
+
+Course = collections.namedtuple('Course', [
+    'course', 'lecturer', 'number_of_lectures',
+    'minimum_working_days', 'number_of_student',
+    'curricula', 'conflicts'
+])
+
+Room = collections.namedtuple('Room', [
+    'room', 'capacity'
+])
+
+Curriculum = collections.namedtuple('Curriculum', [
+    'curriculum', 'courses'
+])
+
+Unavailability = collections.namedtuple('Unavailability', [
+    'course', 'day', 'period'
+])
+
 class Database:
     def __init__(self,
                  basic, courses, lecturers, rooms, curricula, relation, unavailability,
@@ -16,11 +41,6 @@ class Database:
         # Load basic.utt attributes
         with open(basic, 'r') as f:
             data = f.readlines()[1].split()
-            Meta = collections.namedtuple('Meta', [
-                'courses', 'rooms', 'days',
-                'periods_per_day', 'curricula',
-                'constraints', 'lecturers'
-            ])
 
             self.meta = Meta(
                 courses=int(data[0]),
@@ -57,32 +77,18 @@ class Database:
         )
 
     def _load_courses(self, filepath):
-        Course = collections.namedtuple('Course', [
-            'course', 'lecturer', 'number_of_lectures',
-            'minimum_working_days', 'number_of_student',
-            'curricula', 'conflicts'
-        ])
-
         with open(filepath, 'r') as f:
             return {
                 a: Course(a, b, c, d, e, [], []) for (a, b, c, d, e) in _parse_file(f)
             }
 
     def _load_rooms(self, filepath):
-        Room = collections.namedtuple('Room', [
-            'room', 'capacity'
-        ])
-
         with open(filepath, 'r') as f:
             return {
                 a: Room(a, b) for (a, b) in _parse_file(f)
             }
 
     def _load_relation(self, filepath):
-        Curriculum = collections.namedtuple('Curriculum', [
-            'curriculum', 'courses'
-        ])
-
         table = dict()
         with open(filepath, 'r') as f:
             for (curriculum, course) in _parse_file(f):
@@ -93,10 +99,6 @@ class Database:
         return table
 
     def _load_unavailability(self, filepath):
-        Unavailability = collections.namedtuple('Unavailability', [
-            'course', 'day', 'period'
-        ])
-
         with open(filepath, 'r') as f:
             return {
                 Unavailability(a, b, c) for (a, b, c) in _parse_file(f)
