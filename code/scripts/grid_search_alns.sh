@@ -1,6 +1,6 @@
 #!/bin/sh
 #PBS -N grid-search-alns
-#PBS -l walltime=08:30:00
+#PBS -l walltime=24:00:00
 #PBS -l nodes=1:ppn=5
 #PBS -m eba
 #PBS -M amwebdk@gmail.com
