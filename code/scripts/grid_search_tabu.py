@@ -19,7 +19,7 @@ tabu_parameters = collections.OrderedDict([
     ('tabu_limit', [None, 20])
 ])
 
-grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60,
+grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=4,
                              verbose=True)
 
 tabu_results = grid.search(search.TABU, tabu_parameters)

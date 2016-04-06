@@ -17,7 +17,7 @@ alns_parameters = collections.OrderedDict([
     ('remove', [1, 5])
 ])
 
-grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60,
+grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=4,
                              verbose=True)
 
 alns_results = grid.search(search.ALNS, alns_parameters)
