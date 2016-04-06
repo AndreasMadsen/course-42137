@@ -49,7 +49,7 @@ def test_one_iteration():
     assert_equal(init_solution.objective, 223)
 
     # perform tabu search
-    tabu = search.TABU(database, init_solution)
+    tabu = search.TABU(database, init_solution, allow_swap='always')
     tabu.search(0.0001)
 
     # Validate solution

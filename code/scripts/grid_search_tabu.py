@@ -15,7 +15,7 @@ import search
 tabu_parameters = collections.OrderedDict([
     ('diversification', [True, False]),
     ('intensification', [True, False]),
-    ('allow_swap', [True, False]),
+    ('allow_swap', ['never', 'always', 'dynamic']),
     ('tabu_limit', [None, 20])
 ])
 

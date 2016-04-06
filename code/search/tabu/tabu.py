@@ -10,9 +10,12 @@ from search._search_abstract import SearchAbstract
 class TABU(SearchAbstract):
     def __init__(self, database, initial,
                  diversification=None, intensification=None,
-                 tabu_limit=None, allow_swap=True,
+                 tabu_limit=None, allow_swap='never',
                  **kwargs):
         """Standard implementation of TABU
+
+        The only non-standard part is the dynamic enabling option of the
+        swap operations.
 
         Parameters
         ----------
@@ -40,9 +43,11 @@ class TABU(SearchAbstract):
                     this is to simplify the implementation. If None there is no
                     memory limit. (default. None)
 
-        allow_swap: If true swap operations are included in the neighborhood.
-                    Otherwise only move and add+remove operations are included.
-                    (default: False)
+        allow_swap: If 'always' swap operations are included in the neighborhood.
+                    If 'dynamic' awap operations are only included if the other
+                    operations did not find a better solution.
+                    If 'never' only move and add+remove operations are included.
+                    (default: never)
 
         Attributes
         ----------
@@ -50,6 +55,10 @@ class TABU(SearchAbstract):
         solution: the globally best solution
         """
         super().__init__(database, initial, **kwargs)
+
+        # Validate input
+        if allow_swap not in ['always', 'dynamic', 'never']:
+            raise ValueError('allow_swap value %s is not supported' % allow_swap)
 
         self._current = initial.copy()
 
@@ -107,17 +116,24 @@ class TABU(SearchAbstract):
             did_diversification = False
             did_intensification = False
 
-            # Swap can as such be done by performing 3 moves. Futhermore
-            # it is quite expensive to search the neighborhood.
+            # Search the add+remove and move neighborhood
             moves = [
                 self._add_remove.scan_neighborhood(self._current),
                 self._move.scan_neighborhood(self._current)
             ]
-            if self._allow_swap:
+            # Swap can as such be done by performing 3 moves. Futhermore
+            # it is quite expensive to search the neighborhood. Thus this is
+            # optional.
+            if self._allow_swap == 'always':
                 moves.append(self._swap.scan_neighborhood(self._current))
 
             # Find the best move
             best_move = min(*moves, key=lambda move: move.objective)
+
+            # If no good move was found try the swap neighborhood
+            if (self._allow_swap == 'dynamic' and best_move.objective >= 0):
+                moves.append(self._swap.scan_neighborhood(self._current))
+                best_move = min(*moves, key=lambda move: move.objective)
 
             # Apply the best move if it decreases the objective
             if best_move.objective < 0:
