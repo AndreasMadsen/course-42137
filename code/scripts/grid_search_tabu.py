@@ -16,11 +16,11 @@ tabu_parameters = collections.OrderedDict([
     ('diversification', [1, 5, None]),
     ('intensification', [2, 10, None]),
     ('allow_swap', ['never', 'always', 'dynamic']),
-    ('tabu_limit', [None, 20])
+    ('tabu_limit', [10, 20, 40, None])
 ])
 
-grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=4,
-                             verbose=True)
+grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=12,
+                             verbose=True, dry_run=True)
 
 tabu_results = grid.search(search.TABU, tabu_parameters)
 np.save(results_path('tabu.npy'), tabu_results, allow_pickle=False)
