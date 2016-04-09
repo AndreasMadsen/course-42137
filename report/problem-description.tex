@@ -1,0 +1,160 @@
+\section{Problem Description}
+
+The curriculum-based university timetabling problem is about assigning courses, which are associated to a set of curriculums, to a schedule. Each slot in this schedule consists of a room and a time, where the time is discretized into a given number of days and periods pr. day. Each course are to be scheduled a given number of times.
+
+The curriculum part of the problem, is about making sure a student who attend a given curriculum can take all courses, meaning there are no overlapping courses within the  curriculum. There is also an optimization component, which prefers schedule where there are no holes for a given curriculum (called curriculum compactness).
+
+The problem is very precisely defined in the project description \cite{assignment}. The problem will be restated here, but also discussed in terms of the the delta calculations can be done.
+
+Delta calculations is the change in the objective value when performing a simple operation. In this case only adding or removing a single course from a slot (room and time) is considered. In section \ref{sec:mutate-operations} these operations will be precisely defined and it will be discussed how other operations can be implemented using these primitives.
+
+The used notation is the same as in the project description \cite{assignment} and may also be found in appendix \ref{appendix:notation}.
+
+\subsection{Constraints}
+
+It will always be valid to remove a course, thus the following constraints only need to be checked when adding a course to the solution schedule.
+
+\subsubsection{Time availability}
+\begin{equation}
+    \sum_{r \in R} x_{c, t, r} \le F_{c, t} \quad \forall c \in C, t \in T
+\end{equation}
+
+A course may only be assigned once in the same time slot. The dataset also contains a set of unavailable time slots for each course. For those time slots $F_{c, t} = 0$ otherwise $F_{c, t} = 1$.
+
+\textbf{Delta:} This constraint is really two separate constraints. 1. Maintain an indicator that is true if the given course is assigned to the given time. Secondly one can use a lookup table to check if the time slot is defined unavailable.
+
+\subsubsection{Room availability}
+\begin{equation}
+    \sum_{c \in C} x_{c, t, r} \le 1 \quad \forall t \in T, r \in R
+\end{equation}
+
+A slot consisting of room and time may only be used once.
+
+\textbf{Delta:} Maintain an indicator that is true if the slot (time and room) is used.
+
+\subsubsection{Max lectures}
+\begin{equation}
+\sum_{t \in T, r \in R} x_{c, t, r} \le L_c \quad \forall c \in C
+\end{equation}
+
+Prevents more slots to a course than what is needed.
+
+\textbf{Delta: } Maintain a counter of how many times a given course is assigned.
+
+\subsubsection{Conflicting courses}
+\begin{equation}
+\sum_{r \in R} x_{c_1, t, r} + \sum_{r \in R} x_{c_2, t, r} \le 1 \quad \forall c_1, c_2 \in C, t \in T, \chi(c_1, c_2) = 1
+\end{equation}
+
+Conflicting courses may not be assigned the same time slot. Courses are conflicting is taught by the same lecture or part of the same curriculum.
+
+\textbf{Delta: } Pre-calculate a list of of conflicting courses for each course and maintain a list of courses assigned to each time slot. Then check that there are no conflicting courses assigned to the given time slot.
+
+\subsection{Objective}
+
+There are 5 objectives which are combined to a single objective score:
+\begin{equation}
+\mathrm{Objective} = 10 U + 5 W + 2 A + 1 P + 1 V
+\end{equation}
+
+The delta calculationse for the add and remove operations are mostly part the same, just with the sign flipped. For $P$ and $W$ there are minor differences. Furthermore it can be assumed that the constrains are met.
+
+\subsubsection{Room capacity (V)}
+\begin{equation}
+V = \sum_{t \in T, r \in R} V_{t, r}(x), \quad V_{t, r} = \mathrm{max}\left\{ 0, \sum_{c \in C} S_c \cdot x_{c, t, r} - C_r \right\}
+\end{equation}
+
+A course has an associated number of students $S_c$ and a room has an associated capacity $C_r$. $V$ is the penalty for exceeding this capacity.
+
+\textbf{Delta: } One can simply lookup $S_c$ and $C_r$ for a given $(course, time, room)$ combination.
+
+\subsubsection{Unscheduled (U)}
+\begin{equation}
+U = \sum_{c \in C} U_c(x), \quad U_c(x) = \mathrm{max}\left\{ 0, L_c - \sum_{t \in T, r \in R} x_{c, t, r}\right\}
+\end{equation}
+
+A course is to be scheduled a given number of times $L_c$.
+
+\textbf{Delta: } Since the new solution is valid, one can simply subtract or add one to the $U$ sum.
+
+\subsubsection{Room stability (P)}
+\begin{equation}
+P = \sum_{c \in C} P_c(x), \quad P_c(x) = \mathrm{max}\left\{ 0, \left|\left| \left\{ r \in R \Big\vert \sum_{t \in T} x_{c, t, r} \ge 1 \right\} \right|\right| - 1 \right\}
+\end{equation}
+
+A course should be assigned to as few different rooms as possible.
+
+\textbf{Delta: } On addition check if $r$ is a new room for the course. On remove check if room $r$ is used only once in the current solution.
+
+\subsubsection{Minimum working days (W)}
+\begin{equation*}
+W = \sum_{c \in C} W_c(x), \quad W_c(x) = \mathrm{max}\left\{ 0, M_c - \left|\left| \left\{ d \in D \Big\vert \sum_{t \in T(d), r \in R} x_{c, t, r} \ge 1 \right\} \right|\right| \right\}
+\end{equation*}
+
+A course should be assigned times over $M_c$ different days.
+
+\textbf{Delta: } Count the number of days the course is spread over. On addition check if this count is less than $M_c$ and check that the course isn't already scheduled this day. On remove check that the count isn't greater than $M_c$ and that the course isn't scheduled times during this day.
+
+\subsubsection{Curriculum compactness (A)}
+\begin{equation*}
+A = \sum_{q \in Q, t \in T} A_{q, t}(x), \quad A_{q, t}(x) = \begin{cases}
+1 & \text{if} \displaystyle \sum_{c \in C(q), r \in R} x_{c, t, r} = 1 \wedge \sum_{\substack{c \in C(q), r \in R,\\ t' \in T, \Upsilon(t, t')  = 1}} x_{c, t', r} = 0 \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation*}
+
+Penalizes gaps/holes over a day in a curriculum.
+
+\textbf{Delta: } This is the most complicated objective in terms of delta calculation, because one also need to adjust the penalty for adjacent courses in the same curriculum. Thus if the course before was penalized then remove penalty, similarly for the course after. If there are no courses before and after add a penalty.
+
+\subsection{Datasets}
+
+There are 12 datasets each is given as 7 files:
+\begin{itemize}
+\item \texttt{basic.utt} - Contains basic meta information about the problem. Number of courses, rooms, days, periods pr day, etc.
+\item \texttt{courses.utt} - Contains information about each course.
+\item \texttt{curricula.utt} - Contains the number of courses associated to each curriculum. This file was not used as the information could be inferred from \texttt{relation.utt}.
+\item \texttt{lecturers.utt} - Contains a list of lecturers. This file was not used as the information could be inferred from \texttt{courses.utt}.
+\item \texttt{relation.utt} - Relational table that binds curriculum and course.
+\item \texttt{rooms.utt} - Contains information about each room.
+\item \texttt{unavailability.utt} - Contains the list of unavailable time slots for each course.
+\end{itemize}
+
+Using \texttt{basic.utt} the 12 datasets can be summarized:
+
+
+\begin{table}[H]
+\centering
+\centerline{
+\begin{tabular}{r|c c c c c c c}
+	dataset & Courses & Rooms & Days & Periods per day & Curricula & Constraints & Lecturers\\ \hline
+	1 & 30 & 6 & 5 & 6 & 14 & 53 & 24 \\
+	2 & 82 & 16 & 5 & 5 & 70 & 513 & 71 \\
+	3 & 72 & 16 & 5 & 5 & 68 & 382 & 61 \\
+	4 & 79 & 18 & 5 & 5 & 57 & 396 & 70 \\
+	5 & 54 & 9 & 6 & 6 & 139 & 771 & 47 \\
+	6 & 108 & 18 & 5 & 5 & 70 & 632 & 87 \\
+	7 & 131 & 20 & 5 & 5 & 77 & 667 & 99 \\
+	8 & 86 & 18 & 5 & 5 & 61 & 478 & 76 \\
+	9 & 76 & 18 & 5 & 5 & 75 & 405 & 68 \\
+	10 & 115 & 18 & 5 & 5 & 67 & 694 & 88 \\
+	11 & 30 & 5 & 5 & 9 & 13 & 94 & 24 \\
+	12 & 88 & 11 & 6 & 6 & 150 & 1368 & 74
+\end{tabular}}
+\caption{Information from \texttt{basic.utt} for each dataset.}
+\end{table}
+
+
+\subsection{Choosing the metaheuristic models}
+
+As seen the problem is highly constrained problem. ALNS is usually good for highly constrained problems, thus ALNS is an obvious choices.
+
+The objective function is not multi objective, but do consist of many separate sub-objective functions. This suggest Evolutionary Algorithms may be a good choice, as two good solution may minimize two different sub-objectives, thus a crossover between the two solutions could minimize both and become a very good solution. However because of the tightly constrained nature of the problem, it will be difficult to come up with a good crossover algorithm.
+
+GRAPS is likely a poor choice, as the many constraints makes it difficult to come up with many good greedy algorithms.
+
+The neighborhood of a given solution is at least, all possible $(course, time, room)$ additions and removal operations. However because of the big penalty (+10) of removing a $(course, time, room)$ combination, this is unlikely to ever be an immediate good choice. Thus it could makes sense to expand the neighborhood to include all possible moves to an available slot and all possible swaps between two $(course, time, room)$ combinations. The expanded neighborhood is a huge, thus ALNS may also be a good choice.
+
+\subsubsection{Conclustion}
+
+ALNS is chosen because of the many constraints. TABU is chosen because of the large neighborhood. Evolutionary Algorithms is an interesting choice and may be worth investigating, however that is out of the scope for this project.
