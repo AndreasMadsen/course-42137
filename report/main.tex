@@ -1,0 +1,80 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}	% Flere sprog tegnsæt (fx æøå)
+\usepackage[english]{babel}	% Dansk orddeling (kan ændres til english)
+\usepackage[T1]{fontenc}		% Brug 8-bit front
+\usepackage{lmodern}		% Vektor front
+
+\usepackage[svgnames]{xcolor} % Udvider \color med "SVG color names"
+\usepackage{graphicx}	% Kompatibilitet til visning af pixel billeder (.png, .jpg, .gif)
+\usepackage{epstopdf}	% Kompatibilitet til visning af vector billeder (.eps)
+\usepackage{parskip}	% Tilføjer vertikal margin til hver paragraph
+\usepackage{float}		% TIllader H som positions parameter
+\usepackage{subcaption}	% Tillader subfigure, subtable samt \captions
+\usepackage{amssymb}	% Flere matematiske symboler
+\usepackage{amsthm}      % Endnu flere matematiske symboler
+\usepackage{mathtools}	% Det meste matematik (indeholder ams­math og rettelser)
+\usepackage{xfrac}		% Flere fracs (\sfrac{}{})
+\usepackage{listings}	% Indsæt code
+\usepackage{fancyhdr}	% Side hoved og sidefod
+\usepackage{todonotes}	% Cool to-do notes, [disable] skjuler to-do
+\usepackage[bookmarks,bookmarksnumbered,hidelinks]{hyperref} % clickable pdf (til sidst)
+\usepackage[bibstyle=ieee,citestyle=numeric-comp]{biblatex} % Benyt BibLaTeX til formatering
+\usepackage{cleveref} % \cref's (has to be the last loaded ref. package)
+
+%listing settings, æøå support, font config, line number, left lines
+\lstset{
+    breakatwhitespace=false, breaklines=true,
+    inputencoding=utf8, extendedchars=true,
+    literate={å}{{\aa}}1 {æ}{{\ae}}1 {ø}{{\o}}1 {Å}{{\AA}}1 {Æ}{{\AE}}1 {Ø}{{\O}}1,
+    keepspaces=true, showstringspaces=false, basicstyle=\small\ttfamily,
+    frame=L, numbers=left, numberstyle=\scriptsize\color{gray},
+    keywordstyle=\color{SteelBlue}\ttfamily,
+    stringstyle=\color{IndianRed}\ttfamily,
+    commentstyle=\color{Teal}\ttfamily,
+    captionpos=b,
+}
+
+\setlength{\marginparwidth}{80pt} 				% Mere brede på margin notes og to-do
+\setlength{\parindent}{0cm}   					% Deaktiver afsnit indrykning
+\DeclareGraphicsExtensions{.pdf,.eps,.png,.jpg,.gif}	% ændre til .png, .jpg for hurtig visning
+\pagestyle{fancy}
+\fancyhead[L]{Andreas Madsen - s123598}
+
+\setcounter{tocdepth}{2}
+\numberwithin{equation}{section}
+
+\addbibresource{bibliography.bib}
+
+\begin{document}
+
+\title{University Timetabling \\ {\large Curriculum-based Course Timetabling using ALNS and TABU}}
+\author{Andreas Madsen – s123598}
+\date{April 25. 2016}
+
+\maketitle
+\tableofcontents
+\pagebreak
+
+\include{problem-description} % Lør
+
+%\section{Metaheuristic description} % Søn
+\include{mutate-operations}
+\include{gready-initialization}
+\include{tabu-description}
+\include{alns-description}
+
+\include{parameter-tuning} % Man
+
+\include{test-results} % Man, Fre
+
+\include{conclusion} % Fre
+
+\pagebreak
+\appendix
+\include{appendix-notation}
+
+\pagebreak
+\printbibliography
+
+\end{document}

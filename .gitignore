@@ -1,5 +1,8 @@
 *.pyc
 __pycache__
+
 code/dataset/TestDataUTT/
 code/judge/temp
 code/results/
+
+report/main.pdf
