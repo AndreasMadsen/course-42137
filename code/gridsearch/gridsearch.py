@@ -51,7 +51,7 @@ class GridSearch:
         with multiprocessing.Pool(processes=self._workers) as pool:
             for insert_index, settings, objective in \
                     pool.imap_unordered(
-                        self._benchmark,
+                        _benchmark,
                         self._itertate_runs(SearchAlgorithm, parameters)
                     ):
 
@@ -62,25 +62,6 @@ class GridSearch:
                 current_runs += 1
 
         return scores
-
-    @staticmethod
-    def _benchmark(args):
-        # Unpack arguments
-        (insert_index, SearchAlgorithm, database,
-         init_solution, deep_verbose, settings,
-         dry_run, time) = args
-
-        # Create search algorithm
-        algorithm = SearchAlgorithm(database, init_solution,
-                                    verbose=deep_verbose,
-                                    **settings)
-
-        # Search solution
-        if not dry_run:
-            algorithm.search(time)
-
-        # Return data used for verbose printing and result mapping
-        return (insert_index, settings, algorithm.solution.objective)
 
     def _itertate_runs(self, SearchAlgorithm, parameters):
         for settings, index in self.iterate_settings(parameters):
@@ -96,6 +77,24 @@ class GridSearch:
                         self._dry_run,
                         self._time
                     )
+
+def _benchmark(args):
+    # Unpack arguments
+    (insert_index, SearchAlgorithm, database,
+     init_solution, deep_verbose, settings,
+     dry_run, time) = args
+
+    # Create search algorithm
+    algorithm = SearchAlgorithm(database, init_solution,
+                                verbose=deep_verbose,
+                                **settings)
+
+    # Search solution
+    if not dry_run:
+        algorithm.search(time)
+
+    # Return data used for verbose printing and result mapping
+    return (insert_index, settings, algorithm.solution.objective)
 
 def _generate_settings_and_index(parameters, keys=None, settings=dict(), index=tuple()):
     if keys is None: keys = list(reversed(list(parameters.keys())))
