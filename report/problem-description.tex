@@ -6,11 +6,12 @@ The curriculum part of the problem, is about making sure a student who attend a 
 
 The problem is very precisely defined in the project description \cite{assignment}. The problem will be restated here, but also discussed in terms of the the delta calculations can be done.
 
-Delta calculations is the change in the objective value when performing a simple operation. In this case only adding or removing a single course from a slot (room and time) is considered. In section \ref{sec:mutate-operations} these operations will be precisely defined and it will be discussed how other operations can be implemented using these primitives.
+Delta calculations is the change in the objective value when performing a simple operation. In this case only adding or removing a single course from a slot (room and time) is considered. In section \ref{sec:mutate-operations} it will be discussed how other operations can be implemented using these primitives.
 
 The used notation is the same as in the project description \cite{assignment} and may also be found in appendix \ref{appendix:notation}.
 
 \subsection{Constraints}
+\label{sec:problem-constraints}
 
 It will always be valid to remove a course, thus the following constraints only need to be checked when adding a course to the solution schedule.
 
@@ -51,6 +52,7 @@ Conflicting courses may not be assigned the same time slot. Courses are conflict
 \textbf{Delta: } Pre-calculate a list of of conflicting courses for each course and maintain a list of courses assigned to each time slot. Then check that there are no conflicting courses assigned to the given time slot.
 
 \subsection{Objective}
+\label{sec:problem-objective}
 
 There are 5 objectives which are combined to a single objective score:
 \begin{equation}

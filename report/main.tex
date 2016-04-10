@@ -16,11 +16,12 @@
 \usepackage{mathtools}	% Det meste matematik (indeholder ams­math og rettelser)
 \usepackage{xfrac}		% Flere fracs (\sfrac{}{})
 \usepackage{listings}	% Indsæt code
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 \usepackage{fancyhdr}	% Side hoved og sidefod
 \usepackage{todonotes}	% Cool to-do notes, [disable] skjuler to-do
 \usepackage[bookmarks,bookmarksnumbered,hidelinks]{hyperref} % clickable pdf (til sidst)
 \usepackage[bibstyle=ieee,citestyle=numeric-comp]{biblatex} % Benyt BibLaTeX til formatering
-\usepackage{cleveref} % \cref's (has to be the last loaded ref. package)
 
 %listing settings, æøå support, font config, line number, left lines
 \lstset{
@@ -34,6 +35,20 @@
     commentstyle=\color{Teal}\ttfamily,
     captionpos=b,
 }
+
+% algorithm environment
+%http://tex.stackexchange.com/questions/1375/what-is-a-good-package-for-displaying-algorithms
+\newcommand*\Let[2]{\State #1 $\gets$ #2}
+
+\algnewcommand\algorithmicnot{\textbf{not }}
+\newcommand*\Not[0]{\algorithmicnot}
+\newcommand*\Implicit[1]{\State \textit{#1}}
+
+\algrenewcommand\alglinenumber[1]{
+    {\sf\footnotesize\color{gray}\ttfamily#1}}
+\algrenewcommand\algorithmicrequire{\textbf{Precondition:}}
+\algrenewcommand\algorithmicensure{\textbf{Postcondition:}}
+
 
 \setlength{\marginparwidth}{80pt} 				% Mere brede på margin notes og to-do
 \setlength{\parindent}{0cm}   					% Deaktiver afsnit indrykning
@@ -59,10 +74,7 @@
 \include{problem-description} % Lør
 
 %\section{Metaheuristic description} % Søn
-\include{mutate-operations}
-\include{gready-initialization}
-\include{tabu-description}
-\include{alns-description}
+\include{metaheursitic-description}
 
 \include{parameter-tuning} % Man
 
@@ -73,6 +85,7 @@
 \pagebreak
 \appendix
 \include{appendix-notation}
+\include{appendix-operations}
 
 \pagebreak
 \printbibliography

@@ -1,0 +1,89 @@
+\section{Move and swap operation}
+\label{appendix:operations}
+
+
+\begin{algorithm}[H]
+  \caption{Move a course $c$ from slot $(t_0, r_0)$ to $(t_1, t_2)$}
+  \begin{algorithmic}[1]
+    \Function{SimulateMove}{$c, t_0, r_0, t_1, r_1$}
+      \Let{$\Delta_{remove}$}{\Call{SimulateRemove}{$c, t_0, r_0$}}
+      \If{$\Delta_{remove} = None$}
+          \State \Return{None}
+      \EndIf
+      \State \Call{MutateRemove}{$c, t_0, r_0$}
+      \State
+      \Let{$\Delta_{add}$}{\Call{SimulateAdd}{$c, t_1, r_1$}}
+      \If{$\Delta_{add} = None$}
+          \State \Call{MutateAdd}{$c, t_0, r_0$} \Comment{Revert remove operation}
+          \State \Return{None}
+      \EndIf
+      \State
+      \State \Call{MutateAdd}{$c, t_0, r_0$} \Comment{Revert remove operation}
+      \State
+      \State\Return{$\Delta_{remove} + \Delta_{add}$}
+    \EndFunction
+    
+    \Statex
+    \Function{MutateMove}{$c, t_0, r_0, t_1, r_1$}
+        \Let{$\Delta$}{\Call{SimulateMove}{$c, t_0, r_0, t_1, r_1$}}
+        \If{$\Delta \not= None$}
+            \State\Call{MutateRemove}{$c, t_0, r_0$}
+            \State\Call{MutateAdd}{$c, t_1, r_1$}
+        \EndIf
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}[H]
+  \caption{Course $c_0$ and course $c_1$ swaps slots.}
+  \begin{algorithmic}[1]
+    \Function{SimulateSwap}{$c_0, t_0, r_0, c_1, t_1, r_1$}
+      \Let{$\Delta_{remove, 0}$}{\Call{SimulateRemove}{$c_0, t_0, r_0$}}
+      \If{$\Delta_{remove, 0} = None$}
+          \State \Return{None}
+      \EndIf
+      \State \Call{MutateRemove}{$c_0, t_0, r_0$}
+      \State
+      \Let{$\Delta_{remove, 1}$}{\Call{SimulateRemove}{$c_1, t_1, r_1$}}
+      \If{$\Delta_{remove, 1} = None$}
+          \State \Call{MutateAdd}{$c_0, t_0, r_0$} \Comment{Revert remove operation}
+          \State \Return{None}
+      \EndIf
+      \State \Call{MutateRemove}{$c_1, t_1, r_1$}
+      \State
+      \Let{$\Delta_{add, 0}$}{\Call{SimulateAdd}{$c_0, t_1, r_1$}}
+      \If{$\Delta_{add, 0} = None$}
+          \State \Call{MutateAdd}{$c_1, t_1, r_1$} \Comment{Revert operations}
+          \State \Call{MutateAdd}{$c_0, t_0, r_0$}
+          \State \Return{None}
+      \EndIf
+      \State \Call{MutateAdd}{$c_0, t_1, r_1$}
+      \State
+      \Let{$\Delta_{add, 1}$}{\Call{SimulateAdd}{$c_1, t_0, r_0$}}
+      \If{$\Delta_{add, 1} = None$}
+          \State \Call{MutateRemove}{$c_0, t_1, r_1$} \Comment{Revert operations}
+          \State \Call{MutateAdd}{$c_1, t_1, r_1$}
+          \State \Call{MutateAdd}{$c_0, t_0, r_0$}
+          \State \Return{None}
+      \EndIf
+      \State
+      \State \Call{MutateRemove}{$c_0, t_1, r_1$} \Comment{Revert operations}
+      \State \Call{MutateAdd}{$c_1, t_1, r_1$}
+      \State \Call{MutateAdd}{$c_0, t_0, r_0$}
+      \State
+      \State \Return{$\Delta_{remove, 0} + \Delta_{remove, 1} + \Delta_{add, 0} + \Delta_{add, 1}$}
+    \EndFunction
+    
+    \Statex
+    \Function{MutateSwap}{$c_0, t_0, r_0, c_1, t_1, r_1$}
+        \Let{$\Delta$}{\Call{SimulateSwap}{$c_0, t_0, r_0, c_1, t_1, r_1$}}
+        \If{$\Delta \not= None$}
+            \State \Call{MutateRemove}{$c_0, t_0, r_0$}
+            \State \Call{MutateRemove}{$c_1, t_1, r_1$}
+            \State \Call{MutateAdd}{$c_0, t_1, r_1$}
+            \State \Call{MutateAdd}{$c_1, t_0, r_0$}
+        \EndIf
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}

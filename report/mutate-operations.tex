@@ -1,3 +1,61 @@
-\section{Metaheuristic description}
-\subsection{mutate-operations}
+\subsection{Mutatation operations}
 \label{sec:mutate-operations}
+
+The solution schedule is defined as list of $(c \in C, t \in T, r \in R)$, that is course $c$ is assigned to a slot given by the time $t$ and room $r$.
+
+In this project 4 move operations are used. The operations are:
+\begin{itemize}
+\item \texttt{Add($c, t, r$)} - adds course $c$ to the slot $(t, r)$.  
+\item \texttt{Remove($c, t, r$)} - remove course $c$ from the schedule slot $(t, r)$.
+\item \texttt{Move($c, t_0, r_0, t_1, r_1$)} - moves course $c$ from $(t_0, r_0)$ to $(t_1, r_1)$.
+\item \texttt{Swap($c_0, t_0, r_0, c_1, t_1, r_1$)} - course $c_0$ and course $c_1$ swaps slots.
+\end{itemize}
+
+To avoid copying the solution object the above cost of the operations, can be calculated without actually changing the solution object. Those functions are prefixed with \texttt{Simulate}, while the functions that actually changes the solution object are prefixed with \texttt{Mutate}.
+
+\begin{algorithm}[H]
+  \caption{Add a course $c$ to slot $(t, r)$}
+  \begin{algorithmic}[1]
+    \Function{SimulateAdd}{$c, t, r$}
+      \If{\Not \Call{ValidAdd}{$c, t, r$}} \Comment{Discussed in section \ref{sec:problem-constraints}}
+          \State \Return{None}
+      \EndIf
+      \State \Return{\Call{CostAdd}{$c, t, r$}} \Comment{Discussed in section \ref{sec:problem-objective}}
+    \EndFunction
+    
+    \Statex
+    \Function{MutateAdd}{$c, t, r$}
+        \Let{$\Delta$}{\Call{SimulateAdd}{$c, t, r$}}
+        \If{$\Delta \not= None$}
+            \Let{$Objective$}{$Objective + \Delta$}
+            \Implicit{update data structures}
+        \EndIf
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}[H]
+  \caption{Remove a course $c$ from slot $(t, r)$}
+  \begin{algorithmic}[1]
+    \Function{SimulateRemove}{$c, t, r$}
+      \If{\Not \Call{ValidRemove}{$c, t, r$}} \Comment{Discussed in section \ref{sec:problem-constraints}}
+          \State \Return{None}
+      \EndIf
+      \State \Return{\Call{CostRemove}{$c, t, r$}} \Comment{Discussed in section \ref{sec:problem-objective}}
+    \EndFunction
+    
+    \Statex
+    \Function{MutateRemove}{$c, t, r$}
+        \Let{$\Delta$}{\Call{SimulateRemove}{$c, t, r$}}
+        \If{$\Delta \not= None$}
+            \Let{$Objective$}{$Objective + \Delta$}
+            \Implicit{update data structures}
+        \EndIf
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+Note that one typically simulates the operation to check that $\Delta < 0$ and then mutate the solution. Thus it makes sense to add $\Delta$ as an argument to the mutate functions, to avoid unnecessary calculations. This was done in the implementation but is for simplicity excluded here.
+
+The \texttt{Move} and \texttt{Swap} operations can then be implemented, using using the \texttt{Add} and \texttt{Remove} primitives. This is not the most efficient implementation as it requires mutation of the current solution, which are then reverted in the simulation case. However given the time constraints, the more efficient implementations was made. See appendix \ref{appendix:operations} for how \texttt{Move} and \texttt{Swap} was implemented using the primitives.
