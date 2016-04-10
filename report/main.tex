@@ -38,11 +38,10 @@
 
 % algorithm environment
 %http://tex.stackexchange.com/questions/1375/what-is-a-good-package-for-displaying-algorithms
-\newcommand*\Let[2]{\State #1 $\gets$ #2}
-
-\algnewcommand\algorithmicnot{\textbf{not }}
-\newcommand*\Not[0]{\algorithmicnot}
-\newcommand*\Implicit[1]{\State \textit{#1}}
+\algnewcommand{\Let}[2]{\State #1 $\gets$ #2}
+\algnewcommand{\Not}[0]{\textbf{not }}
+\algnewcommand{\Implicit}[1]{\State \textit{#1}}
+\algnewcommand{\LineComment}[1]{\State \(\triangleright\) #1}
 
 \algrenewcommand\alglinenumber[1]{
     {\sf\footnotesize\color{gray}\ttfamily#1}}
@@ -72,14 +71,9 @@
 \pagebreak
 
 \include{problem-description} % Lør
-
-%\section{Metaheuristic description} % Søn
-\include{metaheursitic-description}
-
+\include{metaheursitic-description} % Søn
 \include{parameter-tuning} % Man
-
 \include{test-results} % Man, Fre
-
 \include{conclusion} % Fre
 
 \pagebreak

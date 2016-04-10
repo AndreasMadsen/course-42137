@@ -1,0 +1,43 @@
+\subsection{Greedy initialization}
+
+For this particular problem a schedule with no courses scheduled is a valid solution. A special initialization procedure is thus not necessary. However ALNS and in particular TABU will end up spending many iterations doing simple course additions. This is wasteful as the given optimization time could be spend much more productive.
+
+Thus a simple randomized greedy initialization procedure is used to quickly go from the empty solution to a much more optimal solution.
+
+\begin{algorithm}[H]
+  \caption{Performs a greedy optimization of a solution}
+  \begin{algorithmic}[1]
+    \Function{GreedyInitialization}{$solution$}
+      \LineComment{Create list of missing courses in random order}
+      \Let{$courses$}{\Call{list}{}} \Comment{List with fast push operation}
+      \ForAll{$(c, n)$ in \Call{MissingCourses}{$solution$}}
+        \State \Call{Push}{c on $courses$}, $n$ times
+      \EndFor
+      \Let{$courses$}{\Call{Shuffle}{$courses$}}
+      \State
+      
+      \LineComment{Create list of available slots}
+      \Let{$slots$}{\Call{AvaliableSlots}{$solution$}}
+      \Let{$slots$}{\Call{Shuffle}{$slots$}}
+      \Let{$slots$}{\Call{Deque}{$slots$}} \Comment{Double-ended queue}
+      \State
+    
+      \ForAll{$c$ in courses}
+        \For{$i$ from 1 to \Call{Length}{$slots$}}
+          \Let{$(t, r)$}{\Call{PopRight}{$slots$}}
+          \State
+          \LineComment{add $(c, t, r)$ to solution if it improves the objective}
+          \Let{$\Delta$}{\Call{SimulateAdd}{$c, t, r$}}
+          \If{$\Delta < 0$}
+            \State \Call{MutateAdd}{$c, t, r$} \Comment{Use slot}
+            \State \textbf{break}
+          \Else
+            \State \Call{PushLeft}{$(t, r)$ on $slots$} \Comment{The slot is stil avaliable}
+          \EndIf
+        \EndFor
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+The algorithm tries to add all missing courses to the schedule, but it will only add the course if it improves the solution in the current situation.

@@ -28,7 +28,7 @@ To avoid copying the solution object the above cost of the operations, can be ca
         \Let{$\Delta$}{\Call{SimulateAdd}{$c, t, r$}}
         \If{$\Delta \not= None$}
             \Let{$Objective$}{$Objective + \Delta$}
-            \Implicit{update data structures}
+            \Implicit{update data structures} \Comment{Discussed in section \ref{sec:problem-constraints} and \ref{sec:problem-objective}}
         \EndIf
     \EndFunction
   \end{algorithmic}
@@ -50,12 +50,12 @@ To avoid copying the solution object the above cost of the operations, can be ca
         \Let{$\Delta$}{\Call{SimulateRemove}{$c, t, r$}}
         \If{$\Delta \not= None$}
             \Let{$Objective$}{$Objective + \Delta$}
-            \Implicit{update data structures}
+            \Implicit{update data structures} \Comment{Discussed in section \ref{sec:problem-constraints} and \ref{sec:problem-objective}}
         \EndIf
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
 
-Note that one typically simulates the operation to check that $\Delta < 0$ and then mutate the solution. Thus it makes sense to add $\Delta$ as an argument to the mutate functions, to avoid unnecessary calculations. This was done in the implementation but is for simplicity excluded here.
+Note that one typically simulates the operation to check that $\Delta < 0$ and then mutate the solution object. Thus it makes sense to add $\Delta$ as an optional argument to the mutate functions, to avoid unnecessary calculations. This was done in the implementation but is for simplicity excluded here.
 
 The \texttt{Move} and \texttt{Swap} operations can then be implemented, using using the \texttt{Add} and \texttt{Remove} primitives. This is not the most efficient implementation as it requires mutation of the current solution, which are then reverted in the simulation case. However given the time constraints, the more efficient implementations was made. See appendix \ref{appendix:operations} for how \texttt{Move} and \texttt{Swap} was implemented using the primitives.
