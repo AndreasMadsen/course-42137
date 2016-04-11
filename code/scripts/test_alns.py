@@ -19,7 +19,7 @@ alns_parameters = collections.OrderedDict([
 ])
 
 grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=12,
-                             trials=5, verbose=True, dry_run=True)
+                             trials=5, verbose=True)
 
 alns_results = grid.search(search.ALNS, alns_parameters)
 np.save(results_path('alns_test.npy'), alns_results, allow_pickle=False)

@@ -19,7 +19,7 @@ tabu_parameters = collections.OrderedDict([
 ])
 
 grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=12,
-                             trials=5, verbose=True, dry_run=True)
+                             trials=5, verbose=True)
 
 tabu_results = grid.search(search.TABU, tabu_parameters)
 np.save(results_path('tabu_test.npy'), tabu_results, allow_pickle=False)
