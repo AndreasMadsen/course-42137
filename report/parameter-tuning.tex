@@ -25,6 +25,8 @@ Because one wishes to avoid overfitting of the parameters, a subset of the entir
 \subsection{Tabu}
 \label{sec:parameter-tabu}
 
+A grid search over all 4 parameters is performed. This is $108$ $(\mu, \sigma)$ pairs, which is too much data to visualize. Thus tables with two parameters and the remaining fixed to the best parameters are shown instead.
+
 \begin{table}[H]
 \centering
 \centerline{\begin{tabular}{rr|ccc}
@@ -38,6 +40,8 @@ Because one wishes to avoid overfitting of the parameters, a subset of the entir
 \caption{Shows $(\mu, \sigma)$ with \texttt{allow\_swap=dynamic} and \texttt{tabu\_limit=40} fixed}
 \end{table}
 
+The choice of diversification and intensification appears to be somewhat important. There don't appear to be any linear trend, it is the combination $diversification=5$ and $intensification=10$ that yields to good result. This makes sense since intensification reverts the diversification, thus they need to fix together. $diversification$ is on the edge of the grid search, given more time one should investigate this parameter direction further.
+
 \begin{table}[H]
 \centering
 \centerline{\begin{tabular}{rr|cccc}
@@ -50,6 +54,10 @@ Because one wishes to avoid overfitting of the parameters, a subset of the entir
 \end{tabular}}
 \caption{Shows $(\mu, \sigma)$ with \texttt{diversification=5} and \texttt{intensification=10} fixed}
 \end{table}
+
+Using the dynamic swap neighborhood generally outperforms the other options, though for some tabu limits only slightly. However for the correct parameters, the results shows that having a dynamic neighborhood can greatly outperform a fixed neighborhood. This idea is something that could be applied to other problems as well.
+
+The best parameters are chosen solely based on the $\mu$ values. This is because the $\sigma$ values don't vary too much, but the chosen parameters also turns out to have the best $\sigma$ within the shown subset.
 
 \begin{table}[H]
 \centering
