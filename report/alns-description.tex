@@ -84,9 +84,23 @@ The problem specific ALNS implementation is almost identical to the generalized 
 \Psi = \max\{w_{global}, w_{current}\}
 \end{equation}
 
+The parameters are:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|p{2.5cm}|p{6cm}}
+	name & type & description \\ \hline
+	$\lambda$ & ratio $\in [0, 1]$ & remember parameter used in the moving average update of the probabilities. \\
+	$w_{global}$ & integer & reward for a globally better solution \\
+	$w_{current}$ & positive integer & reword for a locally better solution \\
+	$remove$ & positive integer & number of courses removed in each destroy function
+\end{tabular}
+\caption{Parameters for generalized ALNS search}
+\end{table}
+
 \subsubsection{Destroy functions}
 
-There are 4 destroy functions they all remove a given number ($remove$) of courses using some strategy.
+There are 4 destroy functions, they all remove a given number ($remove$) of courses using some strategy.
 
 \begin{algorithm}[H]
   \caption{remove random (course, time, room) combinations from the solution}
