@@ -94,7 +94,13 @@ class Analyse:
     @staticmethod
     def best_objective(*results_list):
         num_databases = results_list[0].shape[1]
-        return [
-            min(*[np.min(results[:, i]) for results in results_list])
-            for i in range(0, num_databases)
-        ]
+
+        if len(results_list) == 1:
+            return [
+                np.min(results_list[0][:, i]) for i in range(0, num_databases)
+            ]
+        else:
+            return [
+                min(*[np.min(results[:, i]) for results in results_list])
+                for i in range(0, num_databases)
+            ]
