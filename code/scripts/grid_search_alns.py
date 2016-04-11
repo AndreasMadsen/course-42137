@@ -14,12 +14,12 @@ import search
 
 alns_parameters = collections.OrderedDict([
     ('update_lambda', [0.9, 0.95, 0.99]),
-    ('w_global', [5, 10]),
-    ('w_current', [1, 3, 5]),
+    ('w_global', [5, 10, 20]),
+    ('w_current', [1, 3, 5, 10]),
     ('remove', [1, 3, 5])
 ])
 
-grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=4,
+grid = gridsearch.GridSearch(databases, initalizer, time=3 * 60, workers=12,
                              verbose=True)
 
 alns_results = grid.search(search.ALNS, alns_parameters)
