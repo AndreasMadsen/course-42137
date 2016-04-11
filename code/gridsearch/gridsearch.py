@@ -42,7 +42,8 @@ class GridSearch:
 
         # Assume a paralization ratio of 0.8 and use Amdahl's law to calculated
         # expected time usage.
-        scalability = 1 / (1 - 0.8 + (0.8 / self._workers))
+        paralization_factor = 0.95
+        scalability = 1 / (1 - 0.95 + (0.95 / self._workers))
 
         self._print('grid search using %s, expected time usage: %.2f hours' % (
             SearchAlgorithm.__name__, ((total_runs * self._time) / (3600 * scalability))
