@@ -11,7 +11,7 @@ Storing all previous solutions in a tabu list is not very efficient, both in ter
 Finally only typically also applies intensification to the tabu search algorithm. Intensification prevent the algorithm from diversifying so much, that it will takes too many iterations to find a better solution. This can be anything from take core good components from the globally best solution to just restoring the globally best solution. Usually it also involves resetting the tabu list.
 
 \begin{algorithm}[H]
-  \caption{Generalization of the tabu search algorithm}
+  \caption{Generalization of the Tabu search algorithm}
   \begin{algorithmic}[1]
     \Function{TabuSearch}{$solution_{init}$}
     \Let{$s_{global}$}{$solution_{init}$} \Comment{Globally best solution}

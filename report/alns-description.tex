@@ -1,3 +1,183 @@
 \subsection{ALNS general description}
 
+LNS is an search algorithm that uses a destroy method and a repair method. The destroy method will remove a part of the current solution. The destroy method in it self is unlikely to improve the objective value, thus it is followed by a repair method what will search for a better solution. The destroy and repair methods are typically stochastic.
+
+The idea is that by removing parts of the solution without expecting a better solution the search neighborhood becomes very large, without being computationally costly. This will of cause require the repair method to do more good than the destroy method does harm, at least on average. However the performance of the destroy and search method will most likely depend on the specific dataset. ALNS generalizes LNS such that more than one destroy and one repair algorithm can be used. ALNS will then dynamically choice the best destroy and repair algorithms for the specific dataset.
+
+ALNS choices the repair and destroy method by updating the probability of selecting the different repair and destroy methods. In each iteration this probability is used to randomly select the method.
+
+The probability update equations requires the following model parameters:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|p{2.5cm}|p{6cm}}
+	name & type & description \\ \hline
+	$\lambda$ & ratio $\in [0, 1]$ & remember parameter used in the moving average update of the probabilities. \\
+	$w_{global}$ & integer & reward for a globally better solution \\
+	$w_{current}$ & positive integer & reword for a locally better solution \\
+	$w_{accent}$ & positive integer & reward for accepting the new solution \\
+	$w_{reject}$ & positive integer & \textit{reward} for rejecting the new solution
+\end{tabular}
+\caption{Parameters for generalized ALNS search}
+\end{table}
+
+First the reward is calculated as $\Psi = \max\{w_{global}, w_{current}, w_{accept}, w_{reject}\}$ where the $w$ values are zero if the corresponding reward condition weren't meat. If the selected destroy method has index $d$ and the repair method index $r$, the preference values are then updated as:
+\begin{align}
+p_d^- = \lambda p_d^- + (1 - \lambda)\Psi \\
+p_r^+ = \lambda p_r^+ + (1 - \lambda)\Psi
+\end{align}
+
+Here $p^-$ are the preference values for destroy and $p^+$ are for repair.
+
+To converting the preference values to actual probabilities, simply scaled by the sum:
+\begin{align}
+\phi_d^- = \frac{p_d^-}{\sum_{i} p_i^-} \\
+\phi_r^+ = \frac{p_r^+}{\sum_{i} p_i^+}
+\end{align}
+
+To sample from these distributions, one can use compare the commutative sum with a uniformly random number between 0 and 1.
+
+\begin{algorithm}[H]
+  \caption{Samples using the preference values $p$}
+  \begin{algorithmic}[1]
+    \Function{SampleFunction}{$p$}
+      \Let{$\phi$}{\Call{Scale}{$p$}}
+      \Let{c}{\Call{CumSum}{$\phi$}}
+      \Let{rand}{\Call{UniformRandom}{0, 1}}
+      \State \Return{\Call{Bisect}{c, rand}} \Comment{Finds first index where $rand < c_i$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+The entire algorithm can now be stated as:
+
+\begin{algorithm}[H]
+  \caption{Generalization of the ALNS search algorithm}
+  \begin{algorithmic}[1]
+    \Function{AlnsSearch}{$solution_{init}$}
+      \Let{$s_{global}$}{$solution_{init}$} \Comment{Globally best solution}
+      \Let{$s_{local}$}{$solution_{init}$} \Comment{Current solution}
+      \Let{$p^+$, $p^-$}{vector of 1s}
+      \State
+      \Repeat
+      \Let{d}{\Call{SampleFunction}{$p^-$}}
+      \Let{r}{\Call{SampleFunction}{$p^+$}}
+      \Let{$s_{local}$}{\Call{Repair}{\Call{Destroy}{$s_{local}$, d}, r}}
+      \State
+      \Let{$\Psi$}{$\max\{w_{global}, w_{current}, w_{accept}, w_{reject}\}$}
+      \Let{$p_d^-$}{$\lambda p_d^- + (1 - \lambda)\Psi$}
+      \Let{$p_d^+$}{$\lambda p_d^+ + (1 - \lambda)\Psi$}
+      \State
+      \If{\Call{Cost}{$s_{local}$} < \Call{Cost}{$s_{global}$}}
+        \Let{$s_{global}$}{$s_{local}$}
+      \EndIf
+      \Until{no more time}
+      \State \Return{$s_{global}$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
 \subsection{ALNS specialization}
+
+The problem specific ALNS implementation is almost identical to the generalized ALNS. The destroy methods remove (course, time, room) combinations according to specific rules, and the repair methods adds missing courses to the schedule. Because removing a course is always valid and adding courses can be validated atomically, there isn't much point in the $w_{accent}$ and $w_{reject}$ parameters. Thus these are ignored and the gain simply becomes:
+\begin{equation}
+\Psi = \max\{w_{global}, w_{current}\}
+\end{equation}
+
+\subsubsection{Destroy functions}
+
+There are 4 destroy functions they all remove a given number ($remove$) of courses using some strategy.
+
+\begin{algorithm}[H]
+  \caption{remove random (course, time, room) combinations from the solution}
+  \begin{algorithmic}[1]
+    \Function{DestroyFullyRandom}{$solution$}
+      \For{$(c, t, r)$ in \Call{UniformSample}{$\{(c, t, r)\}$, $remove$}}
+        \State \Call{MutateRemove}{$c, t, r$}
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{remove random (course, time, room) combinations from a curriculum}
+  \begin{algorithmic}[1]
+    \Function{DestroyCurriculum}{$solution$}
+      \Let{$q$}{\Call{UniformSample}{$Q, 1$}}
+      \For{$(c, t, r)$ in \Call{UniformSample}{$\{(c, t, r)\ |\ c \in C(q)\}$, $remove$}}
+        \State \Call{MutateRemove}{$c, t, r$}
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{remove random (course, time, room) combinations from a day}
+  \begin{algorithmic}[1]
+    \Function{DestroyDay}{$solution$}
+      \Let{$d$}{\Call{UniformSample}{$D, 1$}}
+      \For{$(c, t, r)$ in \Call{UniformSample}{$\{(c, t, r)\ |\ t \in d\}$, $remove$}}
+        \State \Call{MutateRemove}{$c, t, r$}
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{remove random (course, time, room) combinations where the course is fixed}
+  \begin{algorithmic}[1]
+    \Function{DestroyCourse}{$solution$}
+      \Let{$c_d$}{\Call{UniformSample}{$C, 1$}}
+      \For{$(c, t, r)$ in \Call{UniformSample}{$\{(c, t, r)\ |\ c = c_d\}$, $remove$}}
+        \State \Call{MutateRemove}{$c, t, r$}
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Repair functions}
+
+The repair methods attempt to insert all missing courses.
+
+\begin{algorithm}[H]
+  \caption{picks the first slot for a course that has $\Delta < 0$}
+  \begin{algorithmic}[1]
+    \Function{VeryGreedyRepair}{$solution$}
+      \ForAll{$(c, missing)$ in \Call{MissingCourses}{$solution$}}
+        \ForAll{$(t, r)$ in \Call{AvaliableSlots}{$solution$}}
+          \Let{$\Delta$}{\Call{SimulateAdd}{$c, t, r$}}
+          \If{$\Delta < 0$}
+            \State \Call{MutateAdd}{$c, t, r$}
+            \Let{$missing$}{$missing - 1$}
+            \If{$missing = 0$} \textbf{break} \EndIf
+          \EndIf
+        \EndFor
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{evaluate $\Delta$ independently and takes the best for each course}
+  \begin{algorithmic}[1]
+    \Function{BestPlacementRepair}{$solution$}
+      \ForAll{$(c, missing)$ in \Call{MissingCourses}{$solution$}}
+        \LineComment{Find the best $missing$ slots assuming independently $\Delta$}
+        \Let{$slots$}{\Call{AvaliableSlots}{$solution$}}
+        \Let{$best$}{\Call{MinSort}{$slots$ by \Call{SimulateAdd}{$c, t, r$}, $missing$}}
+        \State
+        \ForAll{$(t, r)$ in $best$}
+          \Let{$\Delta$}{\Call{SimulateAdd}{$c, t, r$}} \Comment{revalidate improvement}
+          \If{$\Delta < 0$}
+            \State \Call{MutateAdd}{$c, t, r$}
+          \EndIf
+        \EndFor
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+An issue with the chosen repair methods is that \texttt{BestPlacementRepair} will almost always perform better than \texttt{VeryGreedyRepair}. However it also require much more computation time. ALNS does not penalize computation time, thus it will likely  \texttt{BestPlacementRepair} even if \texttt{VeryGreedyRepair} was better because it allowed more iterations.
+
+Also note that the repair methods aren't random. This was done for implementation simplicity. It also improves speed as there no need to generate the full list of missing courses or available slots. It is unlikely that the lack of randomness is a big issue because the destroy methods are random. However given more time this would be worth exploring.
+
