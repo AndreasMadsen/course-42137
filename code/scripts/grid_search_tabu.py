@@ -13,7 +13,7 @@ import dataset
 import search
 
 tabu_parameters = collections.OrderedDict([
-    ('diversification', [1, 5, None]),
+    ('diversification', [None, 1, 5]),
     ('intensification', [2, 10, None]),
     ('allow_swap', ['never', 'always', 'dynamic']),
     ('tabu_limit', [10, 20, 40, None])
