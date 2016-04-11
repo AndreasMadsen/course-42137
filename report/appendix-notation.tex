@@ -1,3 +1,50 @@
 \section{Notaton}
 \label{appendix:notation}
-\todo{write notation appendix}
+
+Notation and text descriptions are from the project description \cite{assignment}.
+
+\subsubsection*{Sets}
+
+\begin{description}
+\item[$C$] The set of courses
+\item[$L$] The set of lecturers
+\item[$R$] The set of rooms
+\item[$Q$] The set of curricula
+\item[$T$] The set of time slots. i.e. all pairs of days and periods
+\item[$D$] The set of days
+\item[$T(d)$] The set of time slots that belongs to day $d \in D$
+\item[$C(q)$] The set of courses that belongs to curriculum $q \in Q$
+\end{description}
+
+\subsubsection*{Parameters}
+
+\begin{description}
+\item[$L_c$] The number of lectures there should be for course $c \in C$
+\item[$C_r$] The capacity of room $r \in R$
+\item[$S_c$] The number of students attending course $c$
+\item[$M_c$] The minimum number of days that course c should be spread across
+\end{description}
+
+\begin{align*}
+F_{c,t} &= \begin{cases}
+1 & \text{if course $c \in C$ is available in time slot $t \in T$} \\
+0 & \text{otherwise}
+\end{cases} \\
+\chi(c_1, c_2) &= \begin{cases}
+1 & \parbox[t]{.8\textwidth}{if course $c_1 \in C$ is different from course $c_2 \in C$ ($c_1 \not = c_2$) and conflicting, ie. are taught by the same lecturer or are part of the same curriculum.} \\
+0 & \text{otherwise}
+\end{cases} \\
+\Upsilon(t_1, t_2) &= \begin{cases}
+1 & \parbox[t]{.8\textwidth}{if time slot $t_1$ and $t_2$ belongs to the same day and are adjacent to each other} \\
+0 & \text{otherwise}
+\end{cases}
+\end{align*}
+
+\subsubsection*{Decision Variables}
+
+\begin{equation*}
+x_{c, t, r} = \begin{cases}
+1 & \text{if class $c \in C$ is allocated to room $r \in R$ in time slot $t\in T$} \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation*}
