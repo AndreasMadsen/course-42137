@@ -1,0 +1,104 @@
+\section{Parameter tuning}
+
+In order to find the best set of parameters for the ALNS and Tabu search, different parameter combinations was tried (see section \ref{sec:parameter-tabu} and \ref{sec:parameter-alns}). Each parameter combination was tried 3 times using different initializations.
+
+Because the problems aren't equally difficult and because the objective value aren't normalized, the objective value for each dataset can't be directly compared. To accommodate the best objective value for each dataset is used to normalize the objective (percentage gap):
+\begin{equation}
+\tilde{z}_i = \frac{z_i - z^*}{z^*}
+\end{equation}
+Here $z_i$ is the objective value and $z^*$ is the best objective value for the dataset.
+
+Because one wishes to avoid overfitting of the parameters, a subset of the entire dataset is chosen for parameter optimization, this is called the training dataset. As there do not appear to be any pattern in the dataset id, all odd dataset are chosen for parameter optimization.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{l|rrrrrrr}
+ dataset id &   1 &   3 &   5 &    7 &   9 &   11 &   13 \\
+\hline
+ Tabu   &  35 & 706 & 896 & 1390 & 765 &   36 &  794 \\
+ ALNS   &  24 & 211 & 761 &  211 & 200 &    5 &  166 \\
+ both   &  24 & 211 & 761 &  211 & 200 &    5 &  166 \\
+\end{tabular}
+\caption{Best objective value for each training dataset}
+\end{table}
+
+\subsection{Tabu}
+\label{sec:parameter-tabu}
+
+\begin{table}[H]
+\centering
+\centerline{\begin{tabular}{rr|ccc}
+ &  & \multicolumn{3}{c}{\texttt{intensification}}\\
+ &  & 2 & 10 & None\\
+\hline
+\multirow{3}{*}{\texttt{diversification}} & None & (4.90, 0.52) & (5.36, 0.37) & (5.53, 0.71)\\
+ & 1 & (5.07, 0.97) & (5.34, 0.17) & (5.29, 0.63)\\
+ & 5 & (5.19, 0.41) & (4.14, 0.12) & (5.06, 0.77)\\
+\end{tabular}}
+\caption{Shows $(\mu, \sigma)$ with \texttt{allow\_swap=dynamic} and \texttt{tabu\_limit=40} fixed}
+\end{table}
+
+\begin{table}[H]
+\centering
+\centerline{\begin{tabular}{rr|cccc}
+ &  & \multicolumn{4}{c}{\texttt{tabu\_limit}}\\
+ &  & 10 & 20 & 40 & None\\
+\hline
+\multirow{3}{*}{\texttt{allow\_swap}} & never & (5.53, 0.70) & (5.91, 0.89) & (6.52, 0.60) & (5.93, 0.43)\\
+ & always & (9.12, 0.18) & (8.77, 0.26) & (9.16, 0.87) & (8.82, 0.44)\\
+ & dynamic & (5.52, 0.69) & (5.10, 0.59) & (4.14, 0.12) & (5.45, 0.27)\\
+\end{tabular}}
+\caption{Shows $(\mu, \sigma)$ with \texttt{diversification=5} and \texttt{intensification=10} fixed}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|c}
+parameter & value \\ \hline
+allow swap & dynamic \\
+tabu limit & 40 \\
+intensification & 10 \\
+diversification & 5
+\end{tabular}
+\caption{Best Tabu search parameters with $\mu = 4.139$ and $\sigma = 0.122$}
+\end{table}
+
+\subsection{ALNS}
+\label{sec:parameter-alns}
+
+\begin{table}[H]
+\centering
+\centerline{\begin{tabular}{rr|ccc}
+ &  & \multicolumn{3}{c}{\texttt{remove}}\\
+ &  & 1 & 3 & 5\\
+\hline
+\multirow{3}{*}{\texttt{update\_lambda}} & 0.9 & (0.50, 0.10) & (0.59, 0.01) & (0.82, 0.05)\\
+ & 0.95 & (0.30, 0.08) & (1.07, 0.03) & (1.02, 0.12)\\
+ & 0.99 & (0.56, 0.09) & (1.69, 0.11) & (1.52, 0.07)\\
+\end{tabular}}
+\caption{Shows $(\mu, \sigma)$ with \texttt{w\_global=10} and \texttt{w\_current=5} fixed}
+\end{table}
+
+\begin{table}[H]
+\centering
+\centerline{\begin{tabular}{rr|ccc}
+ &  & \multicolumn{3}{c}{\texttt{w\_current}}\\
+ &  & 1 & 3 & 5\\
+\hline
+\multirow{2}{*}{\texttt{w\_global}} & 5 & (0.55, 0.06) & (0.52, 0.12) & (0.44, 0.03)\\
+ & 10 & (0.49, 0.04) & (0.32, 0.10) & (0.30, 0.08)\\
+\end{tabular}}
+\caption{Shows $(\mu, \sigma)$ with \texttt{update\_lambda=0.95} and \texttt{remove=1} fixed}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|c}
+parameter & value \\ \hline
+$\lambda$ & 0.95 \\
+$w_{global}$ & 10 \\
+$w_{current}$ & 5 \\
+remove & 1 \\
+\end{tabular}
+\caption{Best ALNS parameters with $\mu = 0.3024$ and $\sigma = 0.0846$}
+\end{table}
