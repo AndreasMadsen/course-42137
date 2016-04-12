@@ -12,9 +12,9 @@ import dataset
 import search
 
 alns_parameters = collections.OrderedDict([
-    ('update_lambda', [0.95]),
+    ('update_lambda', [0.99]),
     ('w_global', [10]),
-    ('w_current', [5]),
+    ('w_current', [10]),
     ('remove', [1])
 ])
 
