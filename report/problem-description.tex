@@ -1,10 +1,6 @@
 \section{Problem Description}
 
-The curriculum-based university timetabling problem is about assigning courses, which are associated to a set of curriculums, to a schedule. Each slot in this schedule consists of a room and a time, where the time is discretized into a given number of days and periods pr. day. Each course are to be scheduled a given number of times.
-
-The curriculum part of the problem, is about making sure a student who attend a given curriculum can take all courses, meaning there are no overlapping courses within the  curriculum. There is also an optimization component, which prefers schedule where there are no holes for a given curriculum (called curriculum compactness).
-
-The problem is very precisely defined in the project description \cite{assignment}. The problem will be restated here, but also discussed in terms of the the delta calculations can be done.
+The problem is very precisely defined in the project description \cite{assignment}. The problem will be restated here, but also discussed in terms of how the the delta calculations can be done.
 
 Delta calculations is the change in the objective value when performing a simple operation. In this case only adding or removing a single course from a slot (room and time) is considered. In section \ref{sec:mutate-operations} it will be discussed how other operations can be implemented using these primitives.
 
@@ -20,9 +16,9 @@ It will always be valid to remove a course, thus the following constraints only 
     \sum_{r \in R} x_{c, t, r} \le F_{c, t} \quad \forall c \in C, t \in T
 \end{equation}
 
-A course may only be assigned once in the same time slot. The dataset also contains a set of unavailable time slots for each course. For those time slots $F_{c, t} = 0$ otherwise $F_{c, t} = 1$.
+A course may only be assigned once in the same time slot. The dataset also contains a set of unavailable time slots for each course. For unavailable time slots $F_{c, t} = 0$ otherwise $F_{c, t} = 1$.
 
-\textbf{Delta:} This constraint is really two separate constraints. 1. Maintain an indicator that is true if the given course is assigned to the given time. Secondly one can use a lookup table to check if the time slot is defined unavailable.
+\textbf{Delta:} This constraint is really two separate constraints. First maintain an indicator that is true if the given course is assigned to the given time. Secondly one can use a lookup table to check if the time slot is defined unavailable.
 
 \subsubsection{Room availability}
 \begin{equation}
@@ -38,7 +34,7 @@ A slot consisting of room and time may only be used once.
 \sum_{t \in T, r \in R} x_{c, t, r} \le L_c \quad \forall c \in C
 \end{equation}
 
-Prevents more slots to a course than what is needed.
+Prevents assigning more slots to a course than what is needed.
 
 \textbf{Delta: } Maintain a counter of how many times a given course is assigned.
 
@@ -47,7 +43,7 @@ Prevents more slots to a course than what is needed.
 \sum_{r \in R} x_{c_1, t, r} + \sum_{r \in R} x_{c_2, t, r} \le 1 \quad \forall c_1, c_2 \in C, t \in T, \chi(c_1, c_2) = 1
 \end{equation}
 
-Conflicting courses may not be assigned the same time slot. Courses are conflicting is taught by the same lecture or part of the same curriculum.
+Conflicting courses may not be assigned the same time slot. Courses are conflicting if taught by the same lecture or part of the same curriculum.
 
 \textbf{Delta: } Pre-calculate a list of of conflicting courses for each course and maintain a list of courses assigned to each time slot. Then check that there are no conflicting courses assigned to the given time slot.
 
@@ -59,7 +55,7 @@ There are 5 objectives which are combined to a single objective score:
 \mathrm{Objective} = 10 U + 5 W + 2 A + 1 P + 1 V
 \end{equation}
 
-The delta calculationse for the add and remove operations are mostly part the same, just with the sign flipped. For $P$ and $W$ there are minor differences. Furthermore it can be assumed that the constrains are met.
+The delta calculations for the add and remove operations are mostly the same, just with the sign flipped. For $P$ and $W$ there are minor differences. Furthermore it can be assumed that the constrains are met, as those should already be checked.
 
 \subsubsection{Room capacity (V)}
 \begin{equation}
@@ -93,9 +89,9 @@ A course should be assigned to as few different rooms as possible.
 W = \sum_{c \in C} W_c(x), \quad W_c(x) = \mathrm{max}\left\{ 0, M_c - \left|\left| \left\{ d \in D \Big\vert \sum_{t \in T(d), r \in R} x_{c, t, r} \ge 1 \right\} \right|\right| \right\}
 \end{equation*}
 
-A course should be assigned times over $M_c$ different days.
+A course should be assigned time slots over $M_c$ different days.
 
-\textbf{Delta: } Count the number of days the course is spread over. On addition check if this count is less than $M_c$ and check that the course isn't already scheduled this day. On remove check that the count isn't greater than $M_c$ and that the course isn't scheduled times during this day.
+\textbf{Delta: } Count the number of days the course is spread over. On addition check if this count is less than $M_c$ and check that the course isn't already scheduled this day. On remove check that the count isn't greater than $M_c$ and that the course is scheduled once once this day.
 
 \subsubsection{Curriculum compactness (A)}
 \begin{equation*}
@@ -111,7 +107,7 @@ Penalizes gaps/holes over a day in a curriculum.
 
 \subsection{Datasets}
 
-There are 12 datasets each is given as 7 files:
+There are 12 datasets, each is given as 7 files:
 \begin{itemize}
 \item \texttt{basic.utt} - Contains basic meta information about the problem. Number of courses, rooms, days, periods pr day, etc.
 \item \texttt{courses.utt} - Contains information about each course.
@@ -150,14 +146,14 @@ Using \texttt{basic.utt} the 12 datasets can be summarized:
 
 \subsection{Choosing the metaheuristic models}
 
-As seen the problem is highly constrained problem. ALNS is usually good for highly constrained problems, thus ALNS is an obvious choices.
+As seen the problem is highly constrained problem. ALNS is usually good for highly constrained, thus ALNS is an obvious choice.
 
-The objective function is not multi objective, but do consist of many separate sub-objective functions. This suggest Evolutionary Algorithms may be a good choice, as two good solution may minimize two different sub-objectives, thus a crossover between the two solutions could minimize both and become a very good solution. However because of the tightly constrained nature of the problem, it will be difficult to come up with a good crossover algorithm.
+The objective function is not multi objective, but do consist of many separate sub-objective functions. This suggest Evolutionary Algorithms may be a good choice, as two good solution may minimize two different sub-objectives, thus a crossover between the two solutions could minimize both and become a very good solution. However because the problem is so tightly constrained, it will be difficult to come up with a good crossover algorithm.
 
 GRAPS is likely a poor choice, as the many constraints makes it difficult to come up with many good greedy algorithms.
 
-The neighborhood of a given solution is at least, all possible $(course, time, room)$ additions and removal operations. However because of the big penalty (+10) of removing a $(course, time, room)$ combination, this is unlikely to ever be an immediate good choice. Thus it could makes sense to expand the neighborhood to include all possible moves to an available slot and all possible swaps between two $(course, time, room)$ combinations. The expanded neighborhood is a huge, thus ALNS may also be a good choice.
+The neighborhood of a given solution is at least, all possible $(course, time, room)$ additions and removal operations. However because of the big penalty (+10) of removing a $(course, time, room)$ combination, this is unlikely to ever be an immediate good choice. Thus it make sense to expand the neighborhood to include all possible moves to an available slot and all possible swaps between two $(course, time, room)$ combinations. This expanded neighborhood is huge, thus Tabu Search may also be a good choice.
 
 \subsubsection{Conclustion}
 
-ALNS is chosen because of the many constraints. TABU is chosen because of the large neighborhood. Evolutionary Algorithms is an interesting choice and may be worth investigating, however that is out of the scope for this project.
+ALNS is chosen because of the many constraints. Tabu Search is chosen because of the large neighborhood. Evolutionary Algorithms is an interesting choice and may be worth investigating, however that is out of the scope for this project.

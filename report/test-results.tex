@@ -1,0 +1,31 @@
+\section{Test results}
+
+The best parameters form the parameter tuning in section \ref{sec:parameter-tuning}, are used to test both the Tabu and ALNS model. All odd numbered datasets was used for parameter tuning, thus those datasets shouldn't be used for testing. But for completeness the search algorithms was reapplied on the training set. This time the parameters are fixed thus the number of runs can be increased to 5 runs per dataset.
+
+\begin{table}[H]
+\centering
+\centerline{\begin{tabular}{rr|cc}
+& & Tabu & ALNS \\
+\hline
+\multirow{7}{*}{train} & 1 & (3.00, 0.84) & (0.22, 0.18) \\
+& 3 & (3.07, 0.08) & (0.23, 0.15) \\
+& 5 & (0.14, 0.04) & (0.07, 0.05) \\
+& 7 & (6.33, 0.22) & (0.20, 0.11) \\
+& 9 & (3.19, 0.24) & (0.13, 0.09) \\
+& 11 & (12.80, 2.45) & (0.80, 0.81) \\
+& 13 & (3.90, 0.17) & (0.11, 0.11) \\
+\hline
+\multirow{6}{*}{test} & 2 & (3.17, 0.27) & (0.09, 0.11) \\
+& 4 & (4.88, 0.35) & (0.09, 0.08) \\
+& 6 & (5.06, 0.35) & (0.05, 0.05) \\
+& 8 & (5.19, 0.43) & (0.12, 0.07) \\
+& 10 & (6.22, 0.39) & (0.14, 0.07) \\
+& 12 & (0.92, 0.10) & (0.06, 0.06) \\
+\hline
+\multicolumn{2}{c|}{all train} & (4.63, 0.46) & (0.25, 0.14) \\
+\multicolumn{2}{c|}{all test} & (4.24, 0.15) & (0.09, 0.04) \\
+\end{tabular}}
+\caption{Test and train results over 5 runs using best parameters}
+\end{table}
+
+The Tabu mean is a bit too high given the standard deviance calculated in section \ref{sec:parameter-tuning}. This appears to be caused by dataset number 11, where the Tabu search performs extremely poorly. But overall the values are close to what one would expect, from the parameter tuning in section \ref{sec:parameter-tuning}. The test objective values are actually surprisingly good, as they are a little smaller than those produced by the train datasets.

@@ -4,11 +4,11 @@ Tabu search performs local search using a neighborhood definition, it then picks
 
 Doing just the local search will cause the search algorithm to each a minimum, unfortunately this minimum is very likely to only be a local minima. To escape a local minima Tabu search performs non-optimal moves once a minima is reached, this process is called diversification. This can however cause a cycling behavior, where the opposite or same moves are just applied again, thus reaching the same local minima.
 
-Tabu search attempts to solve the cycling problem by maintaining a tabu list. The tabu list contains all temporarily illegal solutions. Once an optimal change is applied the new solution is added to the tabu list. When performing the local search the tabu list is checked before the change is attempted, this prevents one from reaching the same solution twice.
+Tabu search attempts to solve the cycling problem by maintaining a tabu list. The tabu list contains all temporarily illegal solutions. Once an optimal change is applied the new solution is added to the tabu list. When performing a local search, the tabu list is checked before the change is attempted, this prevents one from reaching the same solution twice.
 
 Storing all previous solutions in a tabu list is not very efficient, both in terms of space and the computational resources required for checking if two solutions are equal. Instead the neighborhood is defined by a set of moves. Once a move is applied to the solution the opposite move is added to the tabu list. By using moves one only needs to store the individual moves and check if two moves are equal, this is much more efficient.
 
-Finally only typically also applies intensification to the tabu search algorithm. Intensification prevent the algorithm from diversifying so much, that it will takes too many iterations to find a better solution. This can be anything from take core good components from the globally best solution to just restoring the globally best solution. Usually it also involves resetting the tabu list.
+Finally only typically also applies intensification to the tabu search algorithm. Intensification prevent the algorithm from diversifying too much, making it very hard to find a globally better solution. This can be anything from take core good components from the globally best solution to just restoring the globally best solution. Usually intensification also involves resetting the tabu list.
 
 \begin{algorithm}[H]
   \caption{Generalization of the Tabu search algorithm}
@@ -62,13 +62,13 @@ The local search scans the neighborhood consisting of:
 \item All possible swaps between two $(course, time, room)$ combinations.
 \end{itemize}
 
-The swap operation is in particularly expensive, on a typical run the tabu search will spend $0.6$ to $0.8$ seconds pr. iteration, without using the swap operation. Adding the swap operation adds an additional $2.5$ to $3.3$ seconds pr. iterations. Adding swap moves to the neighborhood thus introduces a tradeoff between having a large neighborhood and performing many iterations. To optimize this tradeoff a parameter was added.
+The swap operation is in particularly expensive, on a typical run the tabu search will spend $0.6$ to $0.8$ seconds per iteration, without using the swap operation. Adding the swap operation adds an additional $2.5$ to $3.3$ seconds per iterations. Adding swap moves to the neighborhood thus introduces a tradeoff between having a large neighborhood and performing many iterations. To optimize this tradeoff a parameter was added.
 
 Diversification is done by removing random $(course, time, room)$ combinations from the schedule. How may there should be removed is controlled by a parameter.
 
 Intensification is done by simply restoring the globally best solution and resetting the tabu lists.
 
-The tabu search have just a single tabu list. However because the neighborhood is expressed using different move operations, individual tabu lists where used. This simply because of the project time constraints, joining the tabu lists is completely possible.
+The Tabu search have just a single tabu list. However because the neighborhood is expressed using different move operations, individual tabu lists where used. This simply because of the project time constraints, joining the tabu lists is completely possible.
 
 \begin{table}[H]
 \centering

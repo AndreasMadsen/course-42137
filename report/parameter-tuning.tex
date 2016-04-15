@@ -1,8 +1,9 @@
 \section{Parameter tuning}
+\label{sec:parameter-tuning}
 
-In order to find the best set of parameters for the ALNS and Tabu search, different parameter combinations was tried (see section \ref{sec:parameter-tabu} and \ref{sec:parameter-alns}). Each parameter combination was tried 3 times using different initializations.
+In order to find the best set of parameters for the ALNS and Tabu search, different parameter combinations was tried (see section \ref{sec:parameter-tabu} and \ref{sec:parameter-alns}). Each parameter combination was tried 3 times using different random initializations.
 
-Because the problems aren't equally difficult and because the objective value aren't normalized, the objective value for each dataset can't be directly compared. To accommodate the best objective value for each dataset is used to normalize the objective (percentage gap):
+Because the problems aren't equally difficult and because the objective value isn't normalized, the objective value for each dataset can't be directly compared. To accommodate the best objective value for each dataset is used to normalize the objective (percentage gap):
 \begin{equation}
 \tilde{z}_i = \frac{z_i - z^*}{z^*}
 \end{equation}
@@ -25,7 +26,7 @@ Because one wishes to avoid overfitting of the parameters, a subset of the entir
 \subsection{Tabu}
 \label{sec:parameter-tabu}
 
-A grid search over all 4 parameters is performed. This is $108$ $(\mu, \sigma)$ pairs, which is too much data to visualize. Thus tables with two parameters and the remaining fixed to the best parameters are shown instead.
+A grid search over all 4 parameters (see table \ref{table:tabu-search-summary}) is performed. This is $108$ $(\mu, \sigma)$ pairs, which is too much data to visualize. Thus tables with two parameters and the remaining fixed to the best parameters are shown instead.
 
 \begin{table}[H]
 \centering
@@ -40,7 +41,7 @@ A grid search over all 4 parameters is performed. This is $108$ $(\mu, \sigma)$ 
 \caption{Shows $(\mu, \sigma)$ with \texttt{allow\_swap=dynamic} and \texttt{tabu\_limit=40} fixed}
 \end{table}
 
-The choice of diversification and intensification appears to be somewhat important. There don't appear to be any linear trend, it is the combination $diversification=5$ and $intensification=10$ that yields to good result. This makes sense since intensification reverts the diversification, thus they need to fix together. $diversification$ is on the edge of the grid search, given more time one should investigate this parameter direction further.
+The choice of diversification and intensification appears to be somewhat important. There don't appear to be any linear trend, it is the combination $diversification=5$ and $intensification=10$ that yields good result. This makes sense since intensification reverts the diversification, thus they need to fit together. $diversification$ is on the edge of the grid search, given more time one should investigate this parameter direction further.
 
 \begin{table}[H]
 \centering
@@ -69,6 +70,7 @@ intensification & $\{2, 10, \infty\}$ & 10 \\
 diversification & $\{0, 1, 5\}$ & 5
 \end{tabular}
 \caption{Best Tabu search parameters with $\mu = 4.139$ and $\sigma = 0.122$}
+\label{table:tabu-search-summary}
 \end{table}
 
 \subsection{ALNS}

@@ -2,7 +2,7 @@
 
 LNS is an search algorithm that uses a destroy method and a repair method. The destroy method will remove a part of the current solution. The destroy method in it self is unlikely to improve the objective value, thus it is followed by a repair method what will search for a better solution. The destroy and repair methods are typically stochastic.
 
-The idea is that by removing parts of the solution without expecting a better solution the search neighborhood becomes very large, without being computationally costly. This will of cause require the repair method to do more good than the destroy method does harm, at least on average. However the performance of the destroy and search method will most likely depend on the specific dataset. ALNS generalizes LNS such that more than one destroy and one repair algorithm can be used. ALNS will then dynamically choice the best destroy and repair algorithms for the specific dataset.
+The idea is that by removing parts of the solution without expecting a better solution, the search neighborhood becomes very large without being computationally costly. This will of cause require the repair method to do more good than the destroy method does harm, at least on average. However the performance of the destroy and search method will most likely depend on the specific dataset. ALNS generalizes LNS such that more than one destroy and one repair algorithm can be used. ALNS will then dynamically choice the best destroy and repair algorithms for the specific dataset.
 
 ALNS choices the repair and destroy method by updating the probability of selecting the different repair and destroy methods. In each iteration this probability is used to randomly select the method.
 
@@ -29,7 +29,7 @@ p_r^+ = \lambda p_r^+ + (1 - \lambda)\Psi
 
 Here $p^-$ are the preference values for destroy and $p^+$ are for repair.
 
-To converting the preference values to actual probabilities, simply scaled by the sum:
+To convert the preference values to actual probabilities, simply scale by the sum:
 \begin{align}
 \phi_d^- = \frac{p_d^-}{\sum_{i} p_i^-} \\
 \phi_r^+ = \frac{p_r^+}{\sum_{i} p_i^+}
@@ -60,9 +60,9 @@ The entire algorithm can now be stated as:
       \Let{$p^+$, $p^-$}{vector of 1s}
       \State
       \Repeat
-      \Let{d}{\Call{SampleFunction}{$p^-$}}
-      \Let{r}{\Call{SampleFunction}{$p^+$}}
-      \Let{$s_{local}$}{\Call{Repair}{\Call{Destroy}{$s_{local}$, d}, r}}
+      \Let{$d$}{\Call{SampleFunction}{$p^-$}}
+      \Let{$r$}{\Call{SampleFunction}{$p^+$}}
+      \Let{$s_{local}$}{\Call{Repair}{\Call{Destroy}{$s_{local}, d$}, $r$}}
       \State
       \Let{$\Psi$}{$\max\{w_{global}, w_{current}, w_{accept}, w_{reject}\}$}
       \Let{$p_d^-$}{$\lambda p_d^- + (1 - \lambda)\Psi$}
@@ -79,7 +79,7 @@ The entire algorithm can now be stated as:
 
 \subsection{ALNS specialization}
 
-The problem specific ALNS implementation is almost identical to the generalized ALNS. The destroy methods remove (course, time, room) combinations according to specific rules, and the repair methods adds missing courses to the schedule. Because removing a course is always valid and adding courses can be validated atomically, there isn't much point in the $w_{accent}$ and $w_{reject}$ parameters. Thus these are ignored and the gain simply becomes:
+The problem specific ALNS implementation is almost identical to the generalized ALNS. The destroy methods remove (course, time, room) combinations according to specific rules, and the repair methods adds missing courses to the schedule. Because removing a course is always valid and adding courses can be validated atomically, the $w_{accent}$ and $w_{reject}$ parameters serves no purpose, thus the gain simply becomes:
 \begin{equation}
 \Psi = \max\{w_{global}, w_{current}\}
 \end{equation}
@@ -176,7 +176,7 @@ The repair methods attempt to insert all missing courses.
   \begin{algorithmic}[1]
     \Function{BestPlacementRepair}{$solution$}
       \ForAll{$(c, missing)$ in \Call{MissingCourses}{$solution$}}
-        \LineComment{Find the best $missing$ slots assuming independently $\Delta$}
+        \LineComment{Find the best $missing$ slots assuming independent $\Delta$}
         \Let{$slots$}{\Call{AvaliableSlots}{$solution$}}
         \Let{$best$}{\Call{MinSort}{$slots$ by \Call{SimulateAdd}{$c, t, r$}, $missing$}}
         \State
@@ -193,5 +193,4 @@ The repair methods attempt to insert all missing courses.
 
 An issue with the chosen repair methods is that \texttt{BestPlacementRepair} will almost always perform better than \texttt{VeryGreedyRepair}. However it also require much more computation time. ALNS does not penalize computation time, thus it will likely  \texttt{BestPlacementRepair} even if \texttt{VeryGreedyRepair} was better because it allowed more iterations.
 
-Also note that the repair methods aren't random. This was done for implementation simplicity. It also improves speed as there no need to generate the full list of missing courses or available slots. It is unlikely that the lack of randomness is a big issue because the destroy methods are random. However given more time this would be worth exploring.
-
+Also note that the repair methods aren't random. This was done for implementation simplicity. It also improves speed as there no need to generate the full list of missing courses or available slots. Because the destroy methods are random, it is unlikely that the lack of randomness is a big issue. However given more time this would be worth exploring.
