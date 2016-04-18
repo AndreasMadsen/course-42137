@@ -11,7 +11,7 @@ In this project 4 move operations are used. The operations are:
 \item \texttt{Swap($c_0, t_0, r_0, c_1, t_1, r_1$)} - course $c_0$ and course $c_1$ swap slots.
 \end{itemize}
 
-To avoid copying the solution object the cost of the above operations, it should be possible to calculate the $\Delta$ cost without actually changeing the solution object. Those functions are prefixed with \texttt{Simulate}, while the functions that actually changes the solution object are prefixed with \texttt{Mutate}.
+To avoid copying the solution object, it should be possible to calculate the $\Delta$ cost without actually changing the solution object. Those functions are prefixed with \texttt{Simulate}, while the functions that actually changes the solution object are prefixed with \texttt{Mutate}.
 
 \begin{algorithm}[H]
   \caption{Add a course $c$ to slot $(t, r)$}

@@ -1,6 +1,6 @@
 \subsection{Greedy initialization}
 
-For this particular problem a schedule with no courses scheduled is a valid solution. Thus a special initialization procedure is not necessary. However initializing using empty solution will cause ALNS and in particular Tabu search will end up spending many iterations doing simple course additions. This is wasteful as the fixed optimization time could be spend much more productive.
+For this particular problem a schedule with no courses scheduled is a valid solution. Thus a special initialization procedure is not necessary. However initializing using empty solution will cause ALNS and in particular Tabu Search to end up spending many iterations doing simple course additions. This is wasteful as the fixed optimization time could be spend much more productive.
 
 Thus a simple randomized greedy initialization procedure is used to quickly go from the empty solution to a much more optimal solution.
 
@@ -23,7 +23,7 @@ Thus a simple randomized greedy initialization procedure is used to quickly go f
       \State
     
       \ForAll{$c$ in courses}
-        \For{$i$ from 1 to \Call{Length}{$slots$}}
+        \For{$i$ from $1$ to \Call{Length}{$slots$}}
           \Let{$(t, r)$}{\Call{PopRight}{$slots$}}
           \State
           \LineComment{add $(c, t, r)$ to solution if it improves the objective}

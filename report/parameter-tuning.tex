@@ -1,9 +1,9 @@
 \section{Parameter tuning}
 \label{sec:parameter-tuning}
 
-In order to find the best set of parameters for the ALNS and Tabu search, different parameter combinations was tried (see section \ref{sec:parameter-tabu} and \ref{sec:parameter-alns}). Each parameter combination was tried 3 times using different random initializations.
+In order to find the best set of parameters for the ALNS and Tabu Search, different parameter combinations was tried (see section \ref{sec:parameter-tabu} and \ref{sec:parameter-alns}). Each parameter combination was tried 3 times using different random initializations.
 
-Because the problems aren't equally difficult and because the objective value isn't normalized, the objective value for each dataset can't be directly compared. To accommodate the best objective value for each dataset is used to normalize the objective (percentage gap):
+Because the problems aren't equally difficult and because the objective value isn't normalized, the objective value for each dataset can't be directly compared. To accommodate this the best objective value for each dataset is used to normalize the objective, this score is called the \textit{gap}:
 \begin{equation}
 \tilde{z}_i = \frac{z_i - z^*}{z^*}
 \end{equation}

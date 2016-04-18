@@ -1,14 +1,14 @@
-\subsection{Tabu general description}
+\subsection{Tabu Search general description}
 
 Tabu search performs local search using a neighborhood definition, it then picks the best new solution. This process is repeated in each iteration.
 
-Doing just the local search will cause the search algorithm to each a minimum, unfortunately this minimum is very likely to only be a local minima. To escape a local minima Tabu search performs non-optimal moves once a minima is reached, this process is called diversification. This can however cause a cycling behavior, where the opposite or same moves are just applied again, thus reaching the same local minima.
+Doing just the local search will cause the search algorithm to each a minimum, unfortunately this minimum is very likely to only be a local minima. To escape a local minima Tabu Search performs non-optimal moves once a minima is reached, this process is called diversification. This can however cause a cycling behavior, where the opposite or same moves are just applied again, thus reaching the same local minima.
 
 Tabu search attempts to solve the cycling problem by maintaining a tabu list. The tabu list contains all temporarily illegal solutions. Once an optimal change is applied the new solution is added to the tabu list. When performing a local search, the tabu list is checked before the change is attempted, this prevents one from reaching the same solution twice.
 
 Storing all previous solutions in a tabu list is not very efficient, both in terms of space and the computational resources required for checking if two solutions are equal. Instead the neighborhood is defined by a set of moves. Once a move is applied to the solution the opposite move is added to the tabu list. By using moves one only needs to store the individual moves and check if two moves are equal, this is much more efficient.
 
-Finally only typically also applies intensification to the tabu search algorithm. Intensification prevent the algorithm from diversifying too much, making it very hard to find a globally better solution. This can be anything from take core good components from the globally best solution to just restoring the globally best solution. Usually intensification also involves resetting the tabu list.
+Finally only typically also applies intensification to the Tabu Search algorithm. Intensification prevent the algorithm from diversifying too much. Intensification can be anything from take core good components from the globally best solution to just restoring the globally best solution. Usually intensification also involves resetting the tabu list.
 
 \begin{algorithm}[H]
   \caption{Generalization of the Tabu search algorithm}
@@ -22,7 +22,7 @@ Finally only typically also applies intensification to the tabu search algorithm
         \Let{$\Delta$, $move$}{\Call{LocalSearch}{$s_{local}$, $tabu$}} \Comment{Find best $move \not\in tabu$}
         \If{$\Delta$ < 0}
             \Let{$s_{local}$}{\Call{Apply}{$move$ on $s_{local}$}}
-            \State \Call{Add}{$move$ on $tabu$}
+            \State \Call{Add}{\Call{Opposite}{$move$} on $tabu$}
         \Else
             \If{$s_{global}$ hasn't been updated for awhile}
                 \Let{$s_{local}$}{\Call{Intensify}{$s_{global}$}} \Comment{Intensification is optional}
@@ -39,7 +39,7 @@ Finally only typically also applies intensification to the tabu search algorithm
   \end{algorithmic}
 \end{algorithm}
 
-This algorithm have the following parameters:
+The Tabu Search algorithm have the following parameters:
 
 \begin{table}[H]
 \centering
@@ -62,13 +62,13 @@ The local search scans the neighborhood consisting of:
 \item All possible swaps between two $(course, time, room)$ combinations.
 \end{itemize}
 
-The swap operation is in particularly expensive, on a typical run the tabu search will spend $0.6$ to $0.8$ seconds per iteration, without using the swap operation. Adding the swap operation adds an additional $2.5$ to $3.3$ seconds per iterations. Adding swap moves to the neighborhood thus introduces a tradeoff between having a large neighborhood and performing many iterations. To optimize this tradeoff a parameter was added.
+The swap operation is in particularly expensive, on a typical run without using the swap operation, the tabu search will spend $0.6$ to $0.8$ seconds per iteration. Adding the swap operation adds an additional $2.5$ to $3.3$ seconds per iterations. Adding swap moves to the neighborhood thus introduces a tradeoff between having a large neighborhood and performing many iterations. To optimize this tradeoff a parameter was added.
 
 Diversification is done by removing random $(course, time, room)$ combinations from the schedule. How may there should be removed is controlled by a parameter.
 
 Intensification is done by simply restoring the globally best solution and resetting the tabu lists.
 
-The Tabu search have just a single tabu list. However because the neighborhood is expressed using different move operations, individual tabu lists where used. This simply because of the project time constraints, joining the tabu lists is completely possible.
+The Tabu Search have just a single tabu list. However because the neighborhood is expressed using different move operations, individual tabu lists for each operation where used. This was done for implementation simplicity, joining the tabu lists is completely possible and given more time one should do this.
 
 \begin{table}[H]
 \centering
