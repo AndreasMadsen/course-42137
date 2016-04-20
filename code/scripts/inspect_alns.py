@@ -11,17 +11,17 @@ init_solution = solution.Solution(database)
 solution.initialize(init_solution)
 
 # perform tabu search
-tabu = search.TABU(
+alns = search.ALNS(
     database, init_solution,
-    allow_swap='dynamic', tabu_limit=40,
-    diversification=5, intensification=10,
+    update_lambda=0.99, remove=1,
+    w_global=10, w_current=10,
     verbose=True
 )
-tabu.search(30)
+alns.search(30)
 
 # Validate solution
-v = judge.Validator(database, tabu.solution)
+v = judge.Validator(database, alns.solution)
 assert v.valid
 assert v.correct
 
-print(tabu.solution)
+print(alns.solution)
