@@ -7,7 +7,7 @@ from search.alns._destroy import Destroy
 from search._search_abstract import SearchAbstract
 
 class ALNS(SearchAbstract):
-    def __init__(self, database, initial, verbose=False, **kwargs):
+    def __init__(self, database, initial, **kwargs):
         """Standard implementation of ALNS
 
         Parameters
