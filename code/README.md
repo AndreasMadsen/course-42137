@@ -27,6 +27,7 @@ The code is structured into the following directories:
 
 * `dataset`: contains `Database` constructor, used for initializing a dataset
 * `gridsearch`: code for running many optimizations using different parameters
+* `judge`: code for validating the solution using `Judge.exe`.
 * `plot`: code for generating latex tables and other summaries
 * `script`: scripts used for maunal inspecting and running on the HPC cluster
 * `search`: the ALNS and TABU implementations are in here

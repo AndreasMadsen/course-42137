@@ -2,7 +2,7 @@
 
 \subsubsection*{Requirements}
 
-\begin{itemize}
+\begin{itemize}[noitemsep]
 \item python 3.5 or 3.4
 \item numpy (only used in gridsearch for storing results)
 \item nose (only used in test for running tests)
@@ -15,7 +15,7 @@ more complicated that what is needed for this project:
 
 \subsubsection*{Examples}
 
-\begin{itemize}
+\begin{itemize}[noitemsep]
 \item \texttt{scripts/inspect\_tabu.py} will run a single optimization on the first dataset using TABU
 \item \texttt{scripts/inspect\_alns.py} will run a single optimization on the first dataset using ALNS
 \item \texttt{scripts/grid\_search\_tabu.py} the grid search script used for the TABU optimization
@@ -28,9 +28,10 @@ more complicated that what is needed for this project:
 
 The code is structured into the following directories:
 
-\begin{itemize}
+\begin{itemize}[noitemsep]
 \item \texttt{dataset}: contains \texttt{Database} constructor, used for initializing a dataset
 \item \texttt{gridsearch}: code for running many optimizations using different parameters
+\item \texttt{judge}: code for validating the solution using \texttt{Judge.exe}.
 \item \texttt{plot}: code for generating latex tables and other summaries
 \item \texttt{script}: scripts used for manual inspecting and running on the HPC cluster
 \item \texttt{search}: the ALNS and TABU implementations are in here
