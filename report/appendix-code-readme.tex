@@ -1,0 +1,41 @@
+\section{Code ReadMe}
+
+\subsubsection*{Requirements}
+
+\begin{itemize}
+\item python 3.5 or 3.4
+\item numpy (only used in gridsearch for storing results)
+\item nose (only used in test for running tests)
+\item tabulate (only used in plot for generating latex tables)
+\end{itemize}
+
+This install script will setup python 3 on the HPC cluster, but it is much
+more complicated that what is needed for this project:
+\url{https://github.com/AndreasMadsen/my-setup/tree/master/dtu-hpc-python3}
+
+\subsubsection*{Examples}
+
+\begin{itemize}
+\item \texttt{scripts/inspect\_tabu.py} will run a single optimization on the first dataset using TABU
+\item \texttt{scripts/inspect\_alns.py} will run a single optimization on the first dataset using ALNS
+\item \texttt{scripts/grid\_search\_tabu.py} the grid search script used for the TABU optimization
+\item \texttt{scripts/grid\_search\_alns.py} the grid search script used for the ALNS optimization
+\item \texttt{scripts/test\_tabu.py} the test script used for the TABU optimization
+\item \texttt{scripts/test\_alns.py} the test script used for the ALNS optimization
+\end{itemize}
+
+\subsubsection*{Directories}
+
+The code is structured into the following directories:
+
+\begin{itemize}
+\item \texttt{dataset}: contains \texttt{Database} constructor, used for initializing a dataset
+\item \texttt{gridsearch}: code for running many optimizations using different parameters
+\item \texttt{plot}: code for generating latex tables and other summaries
+\item \texttt{script}: scripts used for manual inspecting and running on the HPC cluster
+\item \texttt{search}: the ALNS and TABU implementations are in here
+\item \texttt{solution}: contains \texttt{Solution} constructor that contains the an solution. Its
+ methods simulate moves or mutate the solution. It also contains the random
+ initialization procedure.
+\item \texttt{test}: test scripts, run them using \texttt{make test}
+\end{itemize}
