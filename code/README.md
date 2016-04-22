@@ -14,6 +14,8 @@ https://github.com/AndreasMadsen/my-setup/tree/master/dtu-hpc-python3
 
 ### Running the solver
 
+Only python 3.4 or python 3.5 is required for running the solver.
+
 ```shell
 python3 ./solver.py courses.utt lecturers.utt rooms.utt curricula.utt relation.utt unavailability.utt 300
 ```
