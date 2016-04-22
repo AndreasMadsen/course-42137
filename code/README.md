@@ -12,6 +12,12 @@ This install script will setup python 3 on the HPC cluster, but it is much
 more complicated that what is needed for this project:
 https://github.com/AndreasMadsen/my-setup/tree/master/dtu-hpc-python3
 
+### Running the solver
+
+```shell
+python3 ./solver.py courses.utt lecturers.utt rooms.utt curricula.utt relation.utt unavailability.utt 300
+```
+
 ### Examples
 
 * `scripts/inspect_tabu.py` will run a single optimization on the first dataset using TABU
